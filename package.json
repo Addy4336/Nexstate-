@@ -1,0 +1,27 @@
+{
+  "name": "nexstate-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.3.1",
+  "workspaces": [
+    "nexstate-cms",
+    "nexstate-frontend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:cms": "turbo dev --filter=nexstate-cms",
+    "dev:frontend": "turbo dev --filter=nexstate-frontend",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.16.5",
+    "prettier": "^3.4.2",
+    "turbo": "^2.6.3",
+    "typescript": "^5"
+  }
+}

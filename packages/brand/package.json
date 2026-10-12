@@ -1,0 +1,8 @@
+{
+  "name": "@nexstate/brand",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Single source of truth for agency branding and copy used by both apps.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}
