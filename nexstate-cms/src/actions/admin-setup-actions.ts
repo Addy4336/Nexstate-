@@ -46,11 +46,12 @@ export async function setInitialAdminPassword(formData: {
   token?: string;
 }) {
   try {
+    // Token is checked first, so an unauthenticated caller learns nothing about setup state.
     if (!tokenMatches(formData.token)) {
-      return { error: "Setup is not available" };
+      return { error: "Invalid setup token" };
     }
     if (!(await isSetupOpen())) {
-      return { error: "Setup is not available" };
+      return { error: "Setup has already been completed. Sign in at /admin/login" };
     }
     if (!formData.email || !formData.password || formData.password.length < 8) {
       return { error: "Valid email and a password of at least 8 characters are required" };
