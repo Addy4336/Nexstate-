@@ -1,6 +1,8 @@
 import React from 'react';
 import TripExperienceClient from './trip-experience-client';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { cache } from 'react';
 import { processImageUrls, getFallbackImageUrl } from '@/lib/image-utils';
 
 interface TripExperiencePageProps {
@@ -14,7 +16,7 @@ interface TripExperiencePageProps {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_CMS_API_URL || 'http://localhost:3001';
 
 // Fetch property data from API
-async function getPropertyData(id: string) {
+const getPropertyData = cache(async (id: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/properties/${id}`, {
       cache: 'no-store',
@@ -37,8 +39,7 @@ async function getPropertyData(id: string) {
     console.error('Error fetching property:', error);
     return null;
   }
-}
-
+});
 // Transform API data to component format
 function transformPropertyData(property: any) {
   // Get images - cover_image is text[], images is text[]
@@ -222,64 +223,17 @@ function transformPropertyData(property: any) {
   };
 }
 
-// Fallback data for when API fails
-function getFallbackData(slug: string) {
-  const formattedName = slug
-    ? slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-    : 'Dubai Marina';
 
+export async function generateMetadata({ params }: TripExperiencePageProps): Promise<Metadata> {
+  const { id } = await params;
+  const property = await getPropertyData(id);
+  if (!property) return { title: 'Property not found' };
+  const description = (property.description || '').slice(0, 160) || undefined;
+  const cover = Array.isArray(property.cover_image) ? property.cover_image[0] : undefined;
   return {
-    title: `Beautiful Property in ${formattedName}`,
-    images: [
-      'https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1601221998768-c0cdf463a393?w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1601760562234-9814eea6663a?w=800&auto=format&fit=crop',
-      'https://plus.unsplash.com/premium_photo-1720486620020-c70516e9b69f?w=800&auto=format&fit=crop',
-      'https://plus.unsplash.com/premium_photo-1687996107444-10614a7de48a?w=800&auto=format&fit=crop'
-    ],
-    summary: {
-      location: formattedName,
-      propertyType: 'Villa',
-      bedrooms: 'Four',
-      bathrooms: 'Three',
-      area: '1,024 ft',
-      parking: 'Indoor'
-    },
-    highlights: [
-      { icon: '🏊‍♂️', text: 'Private swimming pool with stunning views' },
-      { icon: '🚗', text: 'Dedicated parking space' },
-      { icon: '🏋️‍♀️', text: 'Access to fitness center' },
-      { icon: '🛡️', text: '24/7 security' },
-    ],
-    description: `Experience comfortable living in this spacious ${formattedName} property.`,
-    propertyRooms: [],
-    insideAmenities: [
-      { icon: '❄️', text: 'Air conditioning' },
-      { icon: '📺', text: 'Smart TV' },
-      { icon: '📶', text: 'High-speed WiFi' },
-    ],
-    outsideAmenities: [
-      { icon: '🏊‍♂️', text: 'Swimming pool' },
-      { icon: '🚗', text: 'Parking' },
-    ],
-    availableFor: [
-      { icon: '👨‍💼', label: 'Single Men', description: 'Welcome' },
-      { icon: '👩‍💼', label: 'Single Women', description: 'Welcome' },
-      { icon: '💑', label: 'Couples', description: 'Welcome' },
-      { icon: '👨‍👩‍👧‍👦', label: 'Families', description: 'Welcome' }
-    ],
-    essentials: [
-      { icon: '🔑', label: 'Key Access' },
-      { icon: '🧼', label: 'Toiletries' },
-    ],
-    faqs: [],
-    pricing: {
-      from: 2500,
-      currency: 'AED',
-      availableDates: [
-        { dates: 'Current Month', price: 2500, available: true, selected: true }
-      ]
-    }
+    title: property.title,
+    description,
+    openGraph: { title: property.title, description, images: cover ? [cover] : undefined },
   };
 }
 
@@ -290,9 +244,8 @@ export default async function PropertyDetailsPage({ params }: TripExperiencePage
   const propertyData = await getPropertyData(id);
 
   // Use API data or fallback
-  const property = propertyData
-    ? transformPropertyData(propertyData)
-    : getFallbackData(slug);
+  if (!propertyData) notFound();
+  const property = transformPropertyData(propertyData);
 
   // Pass rental data to client component
   const rentalData = propertyData ? {

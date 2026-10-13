@@ -1,5 +1,6 @@
 'use client';
 
+import { locationSlug } from "@/lib/slug";
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -132,7 +133,7 @@ export default function PropertiesLocations() {
                         {filteredLocations.map((location, index) => (
                             <Link
                                 key={index}
-                                href={`/properties/${location.toLowerCase().replace(/\s+/g, '-')}`}
+                                href={`/properties/${locationSlug(location)}`}
                                 className="group relative w-full aspect-[4/5] rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer"
                             >
                                 {/* Background Image */}

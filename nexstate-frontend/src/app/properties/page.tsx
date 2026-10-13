@@ -1,5 +1,6 @@
 'use client';
 
+import { locationSlug } from "@/lib/slug";
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -477,7 +478,7 @@ function PropertiesContent() {
                             {properties.map((property) => (
                                 <Link
                                     key={property.id}
-                                    href={`/properties/${property.location.toLowerCase().replace(/\s+/g, '-')}/${property.id}`}
+                                    href={`/properties/${locationSlug(property.location)}/${property.id}`}
                                     className="group"
                                 >
                                     {/* Image */}

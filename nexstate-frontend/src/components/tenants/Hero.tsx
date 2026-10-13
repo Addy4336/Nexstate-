@@ -1,5 +1,6 @@
 "use client";
 
+import { locationSlug } from "@/lib/slug";
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -413,7 +414,7 @@ export default function Hero() {
                                 {properties.map((property) => (
                                     <Link
                                         key={property.id}
-                                        href={`/properties/${property.location.toLowerCase().replace(/\s+/g, '-')}/${property.id}`}
+                                        href={`/properties/${locationSlug(property.location)}/${property.id}`}
                                         className="group bg-background rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border/50"
                                     >
                                         {/* Image */}
