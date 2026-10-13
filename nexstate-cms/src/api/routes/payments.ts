@@ -1,165 +1,155 @@
 import { Elysia, t } from "elysia";
-import { requireStaffGuard } from "../guards";
-import { areDatesAvailable, calculateRentalCost } from "@/lib/rental-utils";
+import { brand } from "@nexstate/brand";
+import { rateLimit, requireStaffGuard } from "../guards";
+import { areDatesAvailable, quoteStay } from "@/lib/rental-utils";
 import { supabaseAdmin } from "@/lib/db";
-import { 
-    createTotalPaySession, 
+import {
+    PaymentConfigError,
     generateOrderNumber,
-    parseWebhookPayload,
-    verifyCallbackSignature,
-    validatePaymentAmount,
-    mapOrderStatusToPaymentStatus,
-    type CheckoutSessionParams,
-    type CheckoutCallbackData
-} from "@/lib/totalpay";
+    getPaymentProvider,
+    isValidAmount,
+    toMinor,
+    MAX_AMOUNT,
+} from "@/lib/payments";
+import { settlePayment } from "@/lib/payments/settle";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export const paymentsRoutes = new Elysia({ prefix: "/payments" })
     /**
-     * Create payment session
+     * Create a checkout. The amount is ALWAYS computed here from the stored property
+     * rate and the requested dates; any client-sent amount is ignored.
      * POST /api/payments/create-session
      */
-    .post("/create-session", async ({ body }) => {
-        try {
-            const { 
-                propertyId, 
-                customerEmail, 
-                customerName, 
-                customerPhone,
-                checkInDate,
-                checkOutDate,
-                guests,
-                enquiryId,
-                description
-            } = body;
+    .post("/create-session", async ({ body, set }) => {
+        const { propertyId, customerEmail, customerName, customerPhone, checkInDate, checkOutDate, guests, enquiryId } = body;
 
-            // Validate input
-            if (!propertyId || !checkInDate || !checkOutDate || !customerEmail || !customerName) {
-                return { 
-                    success: false, 
-                    error: "Missing required fields: propertyId, checkInDate, checkOutDate, customerEmail, customerName" 
-                };
-            }
+        if (!propertyId || !checkInDate || !checkOutDate) {
+            set.status = 400;
+            return { success: false, error: "propertyId, checkInDate and checkOutDate are required" };
+        }
+        if (!EMAIL_RE.test(customerEmail)) {
+            set.status = 400;
+            return { success: false, error: "Invalid email address" };
+        }
+        if (!customerName.trim()) {
+            set.status = 400;
+            return { success: false, error: "Name is required" };
+        }
+        if (!ISO_DATE_RE.test(checkInDate) || !ISO_DATE_RE.test(checkOutDate)) {
+            set.status = 400;
+            return { success: false, error: "Dates must be YYYY-MM-DD" };
+        }
+        const start = new Date(checkInDate);
+        const end = new Date(checkOutDate);
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+            set.status = 400;
+            return { success: false, error: "Invalid dates" };
+        }
 
-            if (!/^[^s@]+@[^s@]+.[^s@]+$/.test(customerEmail)) {
-                return { success: false, error: "Invalid email address" };
-            }
+        const { data: property, error: propError } = await supabaseAdmin
+            .from("property")
+            .select("id, title, price, vat, booking_fee, exit_cleaning_fee, tourism_fee, security_deposit, status, current_rental_end, rental_periods")
+            .eq("id", propertyId)
+            .in("status", ["available", "rented"])
+            .maybeSingle();
 
-            const start = new Date(checkInDate);
-            const end = new Date(checkOutDate);
-            if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
-                return { success: false, error: "Invalid dates" };
-            }
+        if (propError || !property) {
+            set.status = 404;
+            return { success: false, error: "Property not found" };
+        }
 
-            // Price is always computed server-side from the stored property rate
-            const { data: property, error: propError } = await supabaseAdmin
-                .from("property")
-                .select("id, price, status, current_rental_end, rental_periods")
-                .eq("id", propertyId)
-                .single();
+        const availability = areDatesAvailable(checkInDate, checkOutDate, property.current_rental_end, property.rental_periods || []);
+        if (!availability.available) {
+            set.status = 409;
+            return { success: false, error: availability.reason || "Dates not available" };
+        }
 
-            if (propError || !property || property.status === "archived") {
-                return { success: false, error: "Property not found" };
-            }
-
-            const availability = areDatesAvailable(
-                checkInDate,
-                checkOutDate,
-                property.current_rental_end,
-                property.rental_periods || []
-            );
-            if (!availability.available) {
-                return { success: false, error: availability.reason || "Dates not available" };
-            }
-
-            const amount = calculateRentalCost(checkInDate, checkOutDate, Number(property.price)).total;
-            if (!validatePaymentAmount(amount)) {
-                return { success: false, error: "Invalid payment amount" };
-            }
-
-            // Generate unique order number
-            const orderNumber = generateOrderNumber();
-
-            console.log('Creating payment for order:', orderNumber);
-
-            // Create payment record in database
-            const { data: payment, error: dbError } = await supabaseAdmin
-                .from("payments")
-                .insert({
-                    order_number: orderNumber,
-                    property_id: propertyId,
-                    enquiry_id: enquiryId || null,
-                    user_email: customerEmail,
-                    user_name: customerName,
-                    user_phone: customerPhone || null,
-                    amount,
-                    currency: 'USD',
-                    check_in_date: checkInDate || null,
-                    check_out_date: checkOutDate || null,
-                    guests: guests || null,
-                    status: 'pending',
-                })
-                .select()
-                .single();
-
-            if (dbError) {
-                console.error("Database error:", dbError);
-                return { success: false, error: "Failed to create payment record" };
-            }
-
-            // Create TotalPay Checkout session
-            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-            const sessionParams: CheckoutSessionParams = {
-                orderNumber,
-                amount,
-                currency: 'AED',
-                customerEmail,
-                customerName,
-                description: `Property Booking - Order ${orderNumber}`,
-                successUrl: `${baseUrl}/payment/success?order_number=${orderNumber}`,
-                cancelUrl: `${baseUrl}/payment/cancel?order_number=${orderNumber}`,
-                notificationUrl: `${baseUrl}/api/payments/webhook`,
+        const quote = quoteStay(property, checkInDate, checkOutDate);
+        const amount = quote.total;
+        if (!isValidAmount(amount)) {
+            set.status = 400;
+            return {
+                success: false,
+                error: `Online payment supports amounts up to ${brand.market.currencySymbol}${MAX_AMOUNT.toLocaleString(brand.market.locale)}. Please contact us to book this stay.`,
             };
+        }
 
-            const checkoutResponse = await createTotalPaySession(sessionParams);
+        let provider;
+        try {
+            provider = getPaymentProvider();
+        } catch (e) {
+            console.error("Payment provider unavailable:", (e as Error).message);
+            set.status = 503;
+            return { success: false, error: "Online payments are not available right now" };
+        }
 
-            // Update payment with TotalPay payment ID
-            if (checkoutResponse.payment_id) {
-                await supabaseAdmin
-                    .from("payments")
-                    .update({ totalpay_transaction_id: checkoutResponse.payment_id })
-                    .eq("id", payment.id);
-            }
+        const orderNumber = generateOrderNumber(brand.orderPrefix);
+        const currency = brand.market.currency;
 
-            // Store session data
-            await supabaseAdmin
-                .from("payment_sessions")
-                .insert({
-                    payment_id: payment.id,
-                    session_data: checkoutResponse,
-                    redirect_url: checkoutResponse.redirect_url,
-                    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 60 minutes
-                });
-
-            console.log('Checkout session created successfully:', {
+        const { data: payment, error: dbError } = await supabaseAdmin
+            .from("payments")
+            .insert({
                 order_number: orderNumber,
+                property_id: propertyId,
+                enquiry_id: enquiryId || null,
+                user_email: customerEmail,
+                user_name: customerName.trim(),
+                user_phone: customerPhone || null,
+                amount,
+                currency,
+                check_in_date: checkInDate,
+                check_out_date: checkOutDate,
+                guests: guests || null,
+                provider: provider.id,
+                status: "pending",
+            })
+            .select("id")
+            .single();
+
+        if (dbError || !payment) {
+            console.error("Failed to create payment record:", dbError);
+            set.status = 500;
+            return { success: false, error: "Could not start payment" };
+        }
+
+        try {
+            const checkout = await provider.createCheckout({
+                orderNumber,
+                amountMinor: toMinor(amount),
+                currency,
+                description: `${property.title} (${checkInDate} to ${checkOutDate})`.slice(0, 250),
+                customer: { name: customerName.trim(), email: customerEmail, phone: customerPhone },
+            });
+
+            await supabaseAdmin.from("payments").update({ provider_order_id: checkout.providerOrderId }).eq("id", payment.id);
+            await supabaseAdmin.from("payment_sessions").insert({
                 payment_id: payment.id,
-                redirect_url: checkoutResponse.redirect_url?.substring(0, 50) + '...'
+                session_data: { provider_order: checkout.raw, quote } as object,
+                expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
             });
 
             return {
                 success: true,
-                redirect_url: checkoutResponse.redirect_url,
                 order_number: orderNumber,
-                payment_id: payment.id,
+                provider: provider.id,
+                amount,
+                currency,
+                quote,
+                checkout: checkout.clientPayload,
             };
         } catch (error: any) {
-            console.error("Payment session creation error:", error);
-            return { 
-                success: false, 
-                error: error.message || "Internal server error" 
-            };
+            console.error("Checkout creation failed:", error?.message);
+            await supabaseAdmin
+                .from("payments")
+                .update({ status: "failed", provider_status: "create_failed", updated_at: new Date().toISOString() })
+                .eq("id", payment.id);
+            set.status = error instanceof PaymentConfigError ? 503 : 502;
+            return { success: false, error: "Online payments are not available right now" };
         }
     }, {
+        beforeHandle: rateLimit("payments-create", 10),
         body: t.Object({
             propertyId: t.Optional(t.String()),
             amount: t.Optional(t.Number()), // ignored: computed server-side
@@ -172,300 +162,198 @@ export const paymentsRoutes = new Elysia({ prefix: "/payments" })
             enquiryId: t.Optional(t.String()),
             description: t.Optional(t.String()),
         }),
-        detail: {
-            tags: ["Payments"],
-            summary: "Create payment session",
-            description: "Create a TotalPay payment session and return redirect URL",
-        },
+        detail: { tags: ["Payments"], summary: "Create a payment checkout" },
     })
 
     /**
-     * Callback endpoint for payment status updates from TotalPay S2S
+     * Browser callback after checkout. The signed result proves the provider took the payment
+     * for THIS order; we also require it to match the order we stored for this order number.
+     * POST /api/payments/verify
+     */
+    .post("/verify", async ({ body, set }) => {
+        let provider;
+        try {
+            provider = getPaymentProvider();
+        } catch {
+            set.status = 503;
+            return { success: false, error: "Online payments are not available right now" };
+        }
+
+        const verified = provider.verifyClientPayment(body.data);
+        if (!verified) {
+            set.status = 400;
+            return { success: false, error: "Payment could not be verified" };
+        }
+
+        const { data: payment } = await supabaseAdmin
+            .from("payments")
+            .select("id, provider_order_id")
+            .eq("order_number", body.orderNumber)
+            .maybeSingle();
+
+        // Bind the signed provider order to the order number the caller claims
+        if (!payment || payment.provider_order_id !== verified.providerOrderId) {
+            set.status = 400;
+            return { success: false, error: "Payment could not be verified" };
+        }
+
+        const result = await settlePayment({
+            outcome: "paid",
+            provider: provider.id,
+            providerOrderId: verified.providerOrderId,
+            providerPaymentId: verified.providerPaymentId,
+            raw: { source: "client_verify", ...body.data },
+        });
+
+        return { success: result.ok, status: result.status, booking_status: result.bookingStatus };
+    }, {
+        beforeHandle: rateLimit("payments-verify", 20),
+        body: t.Object({
+            orderNumber: t.String(),
+            data: t.Record(t.String(), t.Optional(t.String())),
+        }),
+        detail: { tags: ["Payments"], summary: "Verify a completed checkout" },
+    })
+
+    /**
+     * The customer closed the checkout without paying.
+     * POST /api/payments/cancel
+     */
+    .post("/cancel", async ({ body }) => {
+        await supabaseAdmin
+            .from("payments")
+            .update({ status: "cancelled", updated_at: new Date().toISOString() })
+            .eq("order_number", body.orderNumber)
+            .eq("status", "pending");
+        return { success: true };
+    }, {
+        beforeHandle: rateLimit("payments-cancel", 20),
+        body: t.Object({ orderNumber: t.String() }),
+        detail: { tags: ["Payments"], summary: "Mark an abandoned checkout as cancelled" },
+    })
+
+    /**
+     * Server-to-server callback from the provider. The raw body is needed for signature
+     * verification, so it is parsed as text here.
      * POST /api/payments/webhook
      */
-    .post("/webhook", async ({ body, headers, set }) => {
+    .post("/webhook", async ({ body, request, set }) => {
+        let provider;
         try {
-            // Parse TotalPay Checkout callback payload
-            const payload = parseWebhookPayload(body) as CheckoutCallbackData | null;
-            
-            if (!payload) {
-                console.error("Invalid callback payload");
-                set.status = 400;
-                return 'ERROR';
-            }
-
-            console.log("Callback payload parsed:", {
-                order_number: payload.order_number,
-                order_status: payload.order_status,
-                status: payload.status,
-                type: payload.type,
-                id: payload.id,
-            });
-
-            // Verify callback signature for security
-            const isValidSignature = verifyCallbackSignature(payload);
-            if (!isValidSignature) {
-                console.error("Invalid callback signature - rejecting");
-                set.status = 401;
-                return "ERROR";
-            }
-
-            // Find payment by order number
-            const { data: payment, error: fetchError } = await supabaseAdmin
-                .from("payments")
-                .select("*")
-                .eq("order_number", payload.order_number)
-                .single();
-
-            if (fetchError || !payment) {
-                console.error("Payment not found:", payload.order_number, fetchError);
-                return 'ERROR';
-            }
-
-            // Already processed: acknowledge without re-applying the booking
-            if (payment.status === "success") {
-                return "OK";
-            }
-
-            // Map TotalPay Checkout statuses to our internal statuses
-            // Amount must match what we stored server-side when the session was created
-            if (payload.order_amount !== undefined && Number(payload.order_amount) !== Number(payment.amount)) {
-                console.error("Callback amount mismatch for order", payload.order_number);
-                return "ERROR";
-            }
-
-            const internalStatus = mapOrderStatusToPaymentStatus(payload.order_status);
-
-            // Update payment status
-            const updateData: any = {
-                status: internalStatus,
-                totalpay_transaction_id: payload.id,
-                totalpay_status: payload.order_status,
-                totalpay_response: payload,
-                updated_at: new Date().toISOString(),
-            };
-
-            if (internalStatus === 'success') {
-                updateData.paid_at = new Date().toISOString();
-            } else if (internalStatus === 'failed' && payload.reason) {
-                updateData.decline_reason = payload.reason;
-            }
-
-            const { error: updateError } = await supabaseAdmin
-                .from("payments")
-                .update(updateData)
-                .eq("id", payment.id);
-
-            if (updateError) {
-                console.error("Failed to update payment:", updateError);
-                return { success: false, error: "Failed to update payment" };
-            }
-
-            console.log('Payment updated successfully:', {
-                payment_id: payment.id,
-                new_status: internalStatus,
-                totalpay_status: payload.status,
-            });
-
-            // If payment successful and it's for a property booking
-            if (internalStatus === 'success' && payment.property_id && payment.check_in_date) {
-                console.log('Processing property booking for payment:', payment.id);
-
-                // Get current property data
-                const { data: property } = await supabaseAdmin
-                    .from("property")
-                    .select("rental_periods")
-                    .eq("id", payment.property_id)
-                    .single();
-
-                // Create new rental period
-                const newRentalPeriod = {
-                    start_date: payment.check_in_date,
-                    end_date: payment.check_out_date,
-                    tenant_info: `${payment.user_name} (${payment.user_email})`,
-                    amount: payment.amount,
-                    status: "active",
-                    guests: payment.guests || 1,
-                    payment_id: payment.id,
-                    created_at: new Date().toISOString(),
-                };
-
-                const updatedRentalPeriods = [...(property?.rental_periods || []), newRentalPeriod];
-
-                // Update property status
-                const { error: propertyError } = await supabaseAdmin
-                    .from("property")
-                    .update({
-                        status: "rented",
-                        current_rental_start: payment.check_in_date,
-                        current_rental_end: payment.check_out_date,
-                        rental_periods: updatedRentalPeriods,
-                    })
-                    .eq("id", payment.property_id);
-
-                if (propertyError) {
-                    console.error("Failed to update property:", propertyError);
-                } else {
-                    console.log('Property updated to rented status');
-                }
-
-                // Update enquiry status if exists
-                if (payment.enquiry_id) {
-                    await supabaseAdmin
-                        .from("enquiry")
-                        .update({ status: "converted" })
-                        .eq("id", payment.enquiry_id);
-                    
-                    console.log('Enquiry marked as converted');
-                }
-            }
-
-            // TODO: Send confirmation email to customer
-            // You can integrate with your existing email service here
-
-            // Return 'OK' to TotalPay to acknowledge callback received
-            return 'OK';
-        } catch (error: any) {
-            console.error("Webhook processing error:", error);
-            return { success: false, error: error.message };
+            provider = getPaymentProvider();
+        } catch {
+            set.status = 503;
+            return "unavailable";
         }
+
+        const rawBody = typeof body === "string" ? body : JSON.stringify(body);
+        const event = provider.parseWebhook(rawBody, request.headers.get("x-razorpay-signature"));
+        if (!event) {
+            console.error("Webhook rejected: bad signature or malformed body");
+            set.status = 400;
+            return "invalid";
+        }
+
+        if (event.kind === "paid") {
+            const r = await settlePayment({
+                outcome: "paid",
+                provider: provider.id,
+                providerOrderId: event.providerOrderId,
+                providerPaymentId: event.providerPaymentId,
+                amountMinor: event.amountMinor,
+                currency: event.currency,
+                raw: event.raw,
+            });
+            if (!r.ok && r.error === "Unknown order") {
+                // Not one of ours (e.g. another integration on the same account): acknowledge so it is not retried.
+                return "ignored";
+            }
+        } else if (event.kind === "failed") {
+            await settlePayment({
+                outcome: "failed",
+                provider: provider.id,
+                providerOrderId: event.providerOrderId,
+                providerPaymentId: event.providerPaymentId,
+                reason: event.reason,
+                raw: event.raw,
+            });
+        }
+
+        return "ok";
     }, {
-        body: t.Any(),
-        detail: {
-            tags: ["Payments"],
-            summary: "Payment webhook",
-            description: "Receive payment status updates from TotalPay",
-        },
+        parse: "text",
+        detail: { tags: ["Payments"], summary: "Payment provider webhook" },
     })
 
     /**
-     * Get payment by order number (public: unguessable order number, non-PII fields only)
+     * Public status lookup by (unguessable) order number: non-PII fields only.
      * GET /api/payments/:orderNumber
      */
-    .get("/:orderNumber", async ({ params }) => {
-        try {
-            const { data: payment, error } = await supabaseAdmin
-                .from("payments")
-                .select(`
-                    order_number, amount, currency, status, created_at, paid_at,
-                    check_in_date, check_out_date, guests, totalpay_transaction_id,
-                    property:property_id (
-                        id,
-                        title
-                    )
-                `)
-                .eq("order_number", params.orderNumber)
-                .single();
+    .get("/:orderNumber", async ({ params, set }) => {
+        const { data: payment, error } = await supabaseAdmin
+            .from("payments")
+            .select(`
+                order_number, amount, currency, status, booking_status, created_at, paid_at,
+                check_in_date, check_out_date, guests, provider_payment_id,
+                property:property_id ( id, title )
+            `)
+            .eq("order_number", params.orderNumber)
+            .maybeSingle();
 
-            if (error) {
-                console.error("Error fetching payment:", error);
-                return { success: false, error: "Payment not found" };
-            }
-
-            if (!payment) {
-                return { success: false, error: "Payment not found" };
-            }
-
-            return { success: true, payment };
-        } catch (error: any) {
-            console.error("Exception fetching payment:", error);
-            return { success: false, error: error.message };
+        if (error || !payment) {
+            set.status = 404;
+            return { success: false, error: "Payment not found" };
         }
+        return { success: true, payment };
     }, {
-                params: t.Object({
-            orderNumber: t.String(),
-        }),
-        detail: {
-            tags: ["Payments"],
-            summary: "Get payment details",
-            description: "Retrieve payment information by order number",
-        },
+        params: t.Object({ orderNumber: t.String() }),
+        detail: { tags: ["Payments"], summary: "Get payment status" },
     })
 
     /**
-     * Get all payments (admin only - add auth middleware later)
+     * All payments (staff).
      * GET /api/payments
      */
     .get("/", async ({ query }) => {
-        try {
-            let queryBuilder = supabaseAdmin
-                .from("payments")
-                .select(`
-                    *,
-                    property:property_id (
-                        id,
-                        title
-                    )
-                `)
-                .order("created_at", { ascending: false });
+        let queryBuilder = supabaseAdmin
+            .from("payments")
+            .select("*, property:property_id ( id, title )")
+            .order("created_at", { ascending: false });
 
-            // Add filters if provided
-            if (query.status) {
-                queryBuilder = queryBuilder.eq("status", query.status);
-            }
+        if (query.status) queryBuilder = queryBuilder.eq("status", query.status);
+        if (query.limit) queryBuilder = queryBuilder.limit(Math.min(parseInt(query.limit, 10) || 100, 500));
 
-            if (query.limit) {
-                queryBuilder = queryBuilder.limit(parseInt(query.limit as string));
-            }
-
-            const { data: payments, error } = await queryBuilder;
-
-            if (error) {
-                return { success: false, error: error.message };
-            }
-
-            return { success: true, payments, count: payments?.length || 0 };
-        } catch (error: any) {
-            return { success: false, error: error.message };
-        }
+        const { data: payments, error } = await queryBuilder;
+        if (error) return { success: false, error: error.message };
+        return { success: true, payments, count: payments?.length || 0 };
     }, {
         beforeHandle: requireStaffGuard,
-        query: t.Object({
-            status: t.Optional(t.String()),
-            limit: t.Optional(t.String()),
-        }),
-        detail: {
-            tags: ["Payments"],
-            summary: "List payments",
-            description: "Get all payments with optional filters (admin only)",
-        },
+        query: t.Object({ status: t.Optional(t.String()), limit: t.Optional(t.String()) }),
+        detail: { tags: ["Payments"], summary: "List payments (staff)" },
     })
 
     /**
-     * Get payment statistics (admin dashboard)
+     * Statistics for the admin dashboard (staff). Revenue counts successful payments only.
      * GET /api/payments/stats/summary
      */
     .get("/stats/summary", async () => {
-        try {
-            // Get total payments count and sum
-            const { data: payments, error } = await supabaseAdmin
-                .from("payments")
-                .select("amount, status");
+        const { data: payments, error } = await supabaseAdmin.from("payments").select("amount, status");
+        if (error) return { success: false, error: error.message };
 
-            if (error) {
-                return { success: false, error: error.message };
-            }
-
-            const stats = {
-                total_payments: payments?.length || 0,
-                total_revenue: payments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0,
-                successful_payments: payments?.filter(p => p.status === 'success').length || 0,
-                pending_payments: payments?.filter(p => p.status === 'pending').length || 0,
-                failed_payments: payments?.filter(p => p.status === 'failed').length || 0,
-                successful_revenue: payments
-                    ?.filter(p => p.status === 'success')
-                    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0,
-            };
-
-            return { success: true, stats };
-        } catch (error: any) {
-            return { success: false, error: error.message };
-        }
+        const rows = payments || [];
+        const successful = rows.filter((p) => p.status === "success");
+        return {
+            success: true,
+            stats: {
+                total_payments: rows.length,
+                successful_payments: successful.length,
+                pending_payments: rows.filter((p) => p.status === "pending").length,
+                failed_payments: rows.filter((p) => p.status === "failed").length,
+                cancelled_payments: rows.filter((p) => p.status === "cancelled").length,
+                successful_revenue: successful.reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
+            },
+        };
     }, {
         beforeHandle: requireStaffGuard,
-        detail: {
-            tags: ["Payments"],
-            summary: "Payment statistics",
-            description: "Get payment statistics for admin dashboard",
-        },
+        detail: { tags: ["Payments"], summary: "Payment statistics (staff)" },
     });

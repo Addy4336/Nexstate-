@@ -36,9 +36,9 @@ ENV NEXT_BUILD_WORKERS=2
 # Build-time placeholder environment variables (overridden at runtime)
 ENV BETTER_AUTH_SECRET="build-time-placeholder-secret-replace-at-runtime"
 ENV BETTER_AUTH_BASE_URL="http://localhost:3001"
-ENV TOTALPAY_MERCHANT_KEY="placeholder"
-ENV TOTALPAY_PASSWORD="placeholder"
-ENV TOTALPAY_CHECKOUT_HOST="https://checkout.totalpay.global"
+ENV RAZORPAY_KEY_ID="placeholder"
+ENV RAZORPAY_KEY_SECRET="placeholder"
+ENV RAZORPAY_WEBHOOK_SECRET="placeholder"
 ENV NEXT_PUBLIC_SUPABASE_URL="https://placeholder.supabase.co"
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY="placeholder"
 ENV SUPABASE_SERVICE_ROLE_KEY="placeholder"

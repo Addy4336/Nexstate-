@@ -52,6 +52,41 @@ async function callGeminiAPI(
     }
 }
 
+// Major Indian cities recognised by the heuristic fallback (the configured market city is always added).
+const KNOWN_CITIES = [
+    "bengaluru", "bangalore", "mumbai", "navi mumbai", "thane", "delhi", "new delhi", "gurgaon", "gurugram", "noida",
+    "pune", "hyderabad", "chennai", "kolkata", "ahmedabad", "goa", "jaipur", "kochi", "chandigarh",
+];
+
+/**
+ * Pulls a maximum monthly budget (in rupees) out of free text. Only numbers with a budget
+ * keyword or a currency/unit marker count, so "2 bedroom flat" is never read as a budget.
+ * Understands: under 50000, below 50k, budget 1.5 lakh, up to 2 crore, Rs 40,000, 40000 rupees.
+ */
+export function parseBudgetInr(text: string): number | undefined {
+    const unit = (u?: string) => {
+        if (!u) return 1;
+        if (/^k$|thousand/.test(u)) return 1_000;
+        if (/^l$|lakh|lac/.test(u)) return 100_000;
+        if (/^cr$|crore/.test(u)) return 10_000_000;
+        return 1;
+    };
+    const num = (s: string) => parseFloat(s.replace(/,/g, ""));
+    const patterns = [
+        /(?:under|below|max(?:imum)?|budget|within|upto|up to|less than)\s*(?:of\s*)?(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d+)?)\s*(k|thousand|lakhs?|lacs?|l|crores?|cr)?\b/,
+        /(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d+)?)\s*(k|thousand|lakhs?|lacs?|l|crores?|cr)?\b/,
+        /\b([\d,]+(?:\.\d+)?)\s*(k|thousand|lakhs?|lacs?|crores?|cr)\b/,
+        /\b([\d,]+(?:\.\d+)?)\s*(?:rupees|rs|inr)\b/,
+    ];
+    for (const re of patterns) {
+        const m = text.match(re);
+        if (m && m[1]) {
+            const value = num(m[1]) * unit(m[2]);
+            if (Number.isFinite(value) && value > 0) return Math.round(value);
+        }
+    }
+    return undefined;
+}
 export const aiRoutes = new Elysia({ prefix: "/ai" })
     /**
      * POST /api/ai/parse-search
@@ -68,7 +103,7 @@ export const aiRoutes = new Elysia({ prefix: "/ai" })
             let bedrooms: number | undefined = undefined;
 
             // Attempt AI Extraction via Gemini Free Tier
-            const geminiPrompt = `Extract JSON with fields "location" (string), "budgetMax" (number or null), "bedrooms" (number or null) from this query: "${prompt}". Output JSON only:`;
+            const geminiPrompt = `Extract JSON with fields "location" (string, a city or area), "budgetMax" (maximum monthly rent as a plain number in ${brand.market.currency}; convert lakh=100000 and crore=10000000; null if none), "bedrooms" (number or null) from this query: "${prompt}". Output JSON only:`;
             const geminiOutput = await callGeminiAPI(geminiPrompt);
 
             if (geminiOutput) {
@@ -85,16 +120,12 @@ export const aiRoutes = new Elysia({ prefix: "/ai" })
 
             // Heuristic fallback if Gemini not present or parsing failed
             if (!matchedLocation) {
-                const locations = ["dubai marina", "downtown dubai", "palm jumeirah", "business bay", "jbr", "jlt", "dubai", "marina"];
+                const locations = [brand.market.city.toLowerCase(), ...KNOWN_CITIES];
                 matchedLocation = locations.find((loc) => promptLower.includes(loc)) || "";
             }
 
             if (!budgetMax) {
-                const budgetMatch = promptLower.match(/(?:under|below|max|budget)?\s*(\d+)(?:\s*k|\s*thousand|\s*aed|\s*\$)?/i);
-                if (budgetMatch && budgetMatch[1]) {
-                    const val = parseInt(budgetMatch[1], 10);
-                    budgetMax = val < 500 ? val * 1000 : val;
-                }
+                budgetMax = parseBudgetInr(promptLower);
             }
 
             if (bedrooms === undefined) {

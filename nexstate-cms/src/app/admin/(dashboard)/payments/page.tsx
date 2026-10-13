@@ -1,9 +1,9 @@
-import { brand } from "@nexstate/brand";
+import { brand, formatMoney } from "@nexstate/brand";
 import { supabaseAdmin } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, getPaymentStatusInfo } from "@/lib/totalpay";
-import { DollarSign, TrendingUp, Clock, XCircle, CheckCircle } from "lucide-react";
+import { getPaymentStatusInfo } from "@/lib/payments/status";
+import { IndianRupee, Clock, XCircle, CheckCircle, AlertTriangle } from "lucide-react";
 
 export const metadata = {
     title: `Payments - ${brand.name} Admin`,
@@ -17,7 +17,6 @@ async function getPaymentStats() {
 
     const stats = {
         total_payments: payments?.length || 0,
-        total_revenue: payments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0,
         successful_payments: payments?.filter(p => p.status === 'success').length || 0,
         pending_payments: payments?.filter(p => p.status === 'pending').length || 0,
         failed_payments: payments?.filter(p => p.status === 'failed').length || 0,
@@ -66,11 +65,11 @@ export default async function PaymentsPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <IndianRupee className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            ${stats.successful_revenue.toFixed(2)}
+                            {formatMoney(stats.successful_revenue)}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             From {stats.successful_payments} successful payments
@@ -129,7 +128,7 @@ export default async function PaymentsPage() {
                 <CardHeader>
                     <CardTitle>Recent Payments</CardTitle>
                     <CardDescription>
-                        All payment transactions from TotalPay gateway
+                        All payment transactions
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -182,17 +181,23 @@ export default async function PaymentsPage() {
                                             <p className="text-xs text-muted-foreground">
                                                 {new Date(payment.created_at).toLocaleString()}
                                             </p>
+                                            {payment.status === 'success' && payment.booking_status && payment.booking_status !== 'confirmed' && payment.booking_status !== 'not_applicable' && (
+                                                <p className="text-xs font-medium text-red-700 flex items-center gap-1">
+                                                    <AlertTriangle className="h-3 w-3" />
+                                                    Paid but the booking was not confirmed ({payment.booking_status}). Contact the customer or refund.
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="text-right">
                                             <p className="font-bold text-lg">
-                                                ${Number(payment.amount).toFixed(2)}
+                                                {formatMoney(payment.amount)}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 {payment.currency}
                                             </p>
-                                            {payment.totalpay_transaction_id && (
+                                            {payment.provider_payment_id && (
                                                 <p className="text-xs font-mono text-muted-foreground mt-1">
-                                                    TXN: {payment.totalpay_transaction_id.substring(0, 12)}...
+                                                    TXN: {String(payment.provider_payment_id).substring(0, 16)}
                                                 </p>
                                             )}
                                         </div>

@@ -143,6 +143,58 @@ export function areDatesAvailable(
   return { available: true };
 }
 
+export interface StayQuote {
+  nights: number;
+  rent: number;
+  tax: number;
+  taxRate: number;
+  bookingFee: number;
+  exitCleaningFee: number;
+  tourismFee: number;
+  securityDeposit: number;
+  total: number;
+}
+
+/**
+ * The single source of truth for what a stay costs. The booking page shows this and the
+ * payment charges exactly this, so the customer is never charged a different amount.
+ * nights = check-out minus check-in (minimum 1); rent = monthly price / 30 per night.
+ * The tax rate comes from the property's `vat` column (shown as GST etc. by the UI).
+ */
+export function quoteStay(
+  property: {
+    price: number | string;
+    vat?: number | string | null;
+    booking_fee?: number | string | null;
+    exit_cleaning_fee?: number | string | null;
+    tourism_fee?: number | string | null;
+    security_deposit?: number | string | null;
+  },
+  startDate: string,
+  endDate: string
+): StayQuote {
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const nights = Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / msPerDay));
+  const rent = Math.round((Number(property.price) / 30) * nights);
+  const taxRate = Number(property.vat ?? 5) || 0;
+  const tax = Math.round(rent * (taxRate / 100));
+  const bookingFee = Number(property.booking_fee) || 0;
+  const exitCleaningFee = Number(property.exit_cleaning_fee) || 0;
+  const tourismFee = Number(property.tourism_fee) || 0;
+  const securityDeposit = Number(property.security_deposit) || 0;
+  return {
+    nights,
+    rent,
+    tax,
+    taxRate,
+    bookingFee,
+    exitCleaningFee,
+    tourismFee,
+    securityDeposit,
+    total: rent + tax + bookingFee + exitCleaningFee + tourismFee + securityDeposit,
+  };
+}
+
 /**
  * Calculate rental cost based on daily rate
  */

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { API_BASE } from "@/lib/api";
 
 interface PaymentButtonProps {
     propertyId?: string;
-    amount: number;
     customerEmail: string;
     customerName: string;
     customerPhone?: string;
@@ -14,15 +15,55 @@ interface PaymentButtonProps {
     checkOutDate?: string;
     guests?: number;
     enquiryId?: string;
-    description?: string;
     className?: string;
     children?: React.ReactNode;
     disabled?: boolean;
 }
 
+// Minimal typing for Razorpay Standard Checkout (https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/)
+declare global {
+    interface Window {
+        Razorpay?: new (options: Record<string, unknown>) => {
+            open: () => void;
+            on: (event: string, handler: (response: any) => void) => void;
+        };
+    }
+}
+
+const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
+
+function loadCheckoutScript(): Promise<boolean> {
+    if (typeof window === "undefined") return Promise.resolve(false);
+    if (window.Razorpay) return Promise.resolve(true);
+    return new Promise((resolve) => {
+        const existing = document.querySelector<HTMLScriptElement>(`script[src="${CHECKOUT_SRC}"]`);
+        const script = existing ?? document.createElement("script");
+        script.addEventListener("load", () => resolve(true), { once: true });
+        script.addEventListener("error", () => resolve(false), { once: true });
+        if (!existing) {
+            script.src = CHECKOUT_SRC;
+            script.async = true;
+            document.body.appendChild(script);
+        }
+    });
+}
+
+async function postJson(path: string, body: unknown) {
+    const res = await fetch(`${API_BASE}/api${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, data };
+}
+
+/**
+ * Starts a payment. The server computes the amount from the stored property rate and the
+ * chosen dates; the browser only ever supplies who is paying and which dates.
+ */
 export function PaymentButton({
     propertyId,
-    amount,
     customerEmail,
     customerName,
     customerPhone,
@@ -30,95 +71,84 @@ export function PaymentButton({
     checkOutDate,
     guests,
     enquiryId,
-    description,
     className,
     children = "Proceed to Payment",
     disabled = false,
 }: PaymentButtonProps) {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handlePayment = async () => {
-        try {
-            setLoading(true);
-            setError(null);
+        setLoading(true);
+        setError(null);
 
-            // Validate required fields
-            if (!amount || !customerEmail || !customerName) {
-                throw new Error('Missing required payment information');
+        try {
+            if (!propertyId || !checkInDate || !checkOutDate || !customerEmail || !customerName) {
+                throw new Error("Please fill in your details and choose your dates");
             }
 
-            console.log('Creating payment session...', {
-                amount,
+            const scriptReady = await loadCheckoutScript();
+            if (!scriptReady || !window.Razorpay) {
+                throw new Error("Could not load the payment window. Check your connection and try again.");
+            }
+
+            const { ok, data } = await postJson("/payments/create-session", {
+                propertyId,
                 customerEmail,
                 customerName,
+                customerPhone,
+                checkInDate,
+                checkOutDate,
+                guests,
+                enquiryId,
             });
+            if (!ok || !data.success) throw new Error(data.error || "Could not start the payment");
 
-            // Call backend API to create payment session
-            const response = await fetch('http://localhost:3001/api/payments/create-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const orderNumber: string = data.order_number;
+            let finished = false;
+
+            const rzp = new window.Razorpay({
+                ...data.checkout,
+                handler: async (response: Record<string, string>) => {
+                    finished = true;
+                    setLoading(true);
+                    const verified = await postJson("/payments/verify", { orderNumber, data: response });
+                    // The status page reads the real payment state from the server, so a slow
+                    // or failed verify call never shows a wrong result.
+                    router.push(`/payment/success?order_number=${encodeURIComponent(orderNumber)}${verified.ok ? "" : "&check=1"}`);
                 },
-                body: JSON.stringify({
-                    propertyId,
-                    amount,
-                    customerEmail,
-                    customerName,
-                    customerPhone,
-                    checkInDate,
-                    checkOutDate,
-                    guests,
-                    enquiryId,
-                    description,
-                }),
+                modal: {
+                    ondismiss: () => {
+                        if (finished) return;
+                        void postJson("/payments/cancel", { orderNumber });
+                        setLoading(false);
+                        setError("Payment cancelled. You have not been charged.");
+                    },
+                },
             });
 
-            const data = await response.json();
-            
-            console.log('Backend response:', data);
-
-            if (!response.ok || !data.success) {
-                const errorMsg = data.error || data.message || 'Failed to create payment session';
-                console.error('Payment creation failed:', errorMsg);
-                throw new Error(errorMsg);
-            }
-
-            console.log('Payment session created:', {
-                order_number: data.order_number,
-                redirect_url: data.redirect_url,
+            rzp.on("payment.failed", (response: any) => {
+                if (finished) return;
+                setError(response?.error?.description || "The payment failed. Please try again.");
+                setLoading(false);
             });
 
-            // Redirect to TotalPay checkout page
-            if (data.redirect_url) {
-                // Store order number in session storage for later reference
-                sessionStorage.setItem('nexstate_payment_order', data.order_number);
-                
-                // Redirect to TotalPay
-                window.location.href = data.redirect_url;
-            } else {
-                throw new Error('No redirect URL received from payment gateway');
-            }
+            rzp.open();
         } catch (err: any) {
-            console.error('Payment error:', err);
-            setError(err.message || 'Failed to initiate payment');
+            setError(err?.message || "Failed to start the payment");
             setLoading(false);
         }
     };
 
     return (
         <div className="space-y-2">
-            <Button
-                onClick={handlePayment}
-                disabled={loading || disabled}
-                className={className}
-                size="lg"
-            >
+            <Button onClick={handlePayment} disabled={loading || disabled} className={className} size="lg">
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {loading ? 'Processing...' : children}
+                {loading ? "Processing..." : children}
             </Button>
             {error && (
-                <p className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                <p role="alert" className="text-sm text-red-600 bg-red-50 p-2 rounded">
                     {error}
                 </p>
             )}

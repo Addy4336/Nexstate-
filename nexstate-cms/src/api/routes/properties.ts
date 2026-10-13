@@ -1,7 +1,8 @@
 import { Elysia, t } from "elysia";
 import { redactTenantData, getApiSession, requireStaffGuard } from "../guards";
 import { supabaseAdmin } from "@/lib/db";
-import { areDatesAvailable, calculateRentalCost, validateMinimumStay } from "@/lib/rental-utils";
+import { areDatesAvailable, calculateRentalCost, validateMinimumStay, quoteStay } from "@/lib/rental-utils";
+import { brand } from "@nexstate/brand";
 import { PUBLIC_PROPERTY_SELECT, toPublicProperty, toPublicProperties } from "@/lib/public-property";
 
 // "/:id" must not expose drafts/archived/sold listings to anonymous clients
@@ -589,6 +590,30 @@ export const propertiesRoutes = new Elysia({ prefix: "/properties" })
         },
     })
     
+    // Authoritative price quote for a stay (the payment charges exactly this total)
+    .get("/:id/quote", async ({ params, query, set }) => {
+        const { data: property, error } = await supabaseAdmin
+            .from("property")
+            .select("id, price, vat, booking_fee, exit_cleaning_fee, tourism_fee, security_deposit, status")
+            .eq("id", params.id)
+            .in("status", PUBLIC_STATUSES)
+            .maybeSingle();
+
+        if (error || !property) {
+            set.status = 404;
+            return { success: false, error: "Property not found" };
+        }
+        if (isNaN(new Date(query.start_date).getTime()) || isNaN(new Date(query.end_date).getTime())) {
+            set.status = 400;
+            return { success: false, error: "Invalid dates" };
+        }
+        return { success: true, currency: brand.market.currency, quote: quoteStay(property, query.start_date, query.end_date) };
+    }, {
+        params: t.Object({ id: t.String() }),
+        query: t.Object({ start_date: t.String(), end_date: t.String() }),
+        detail: { tags: ["Properties"], summary: "Quote a stay" },
+    })
+
     // Check property availability for specific dates
     .get("/:id/availability", async ({ params, query }) => {
         const { start_date, end_date } = query;

@@ -1,7 +1,9 @@
 "use client";
 
+import { formatMoney } from "@nexstate/brand";
+import { API_BASE } from "@/lib/api";
 import { brand } from "@nexstate/brand";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X, Plus, Minus, Camera, Heart, Share2, Bookmark, Bed, Bath, Square, Car, Shield, MapPin, Clock, Flag, Star, Check, Calendar as CalendarIcon, ImageOff } from 'lucide-react';
@@ -231,6 +233,19 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
   const [isPriceDetailsOpen, setIsPriceDetailsOpen] = useState(false);
   const [isPaymentTimelineOpen, setIsPaymentTimelineOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [serverQuote, setServerQuote] = useState<{ total: number } | null>(null);
+
+  // The payment charges the server's quote, so show exactly that figure in the checkout dialog
+  useEffect(() => {
+    if (!isPaymentDialogOpen || !checkInDate || !checkOutDate) return;
+    let cancelled = false;
+    const qs = `start_date=${format(checkInDate, 'yyyy-MM-dd')}&end_date=${format(checkOutDate, 'yyyy-MM-dd')}`;
+    fetch(`/api/properties/${id}/quote?${qs}`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled && d?.success) setServerQuote(d.quote); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [isPaymentDialogOpen, checkInDate, checkOutDate, id]);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
@@ -1372,7 +1387,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                   {/* Price */}
                   <div className="mb-4">
                     <span className="text-xl font-bold text-primary">
-                      {trip.pricing.currency} {trip.pricing.from.toLocaleString()}
+                      {formatMoney(trip.pricing.from)}
                     </span>
                     <span className="text-muted-foreground text-sm ml-1">/Monthly</span>
                   </div>
@@ -1453,17 +1468,17 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                         <span className="text-muted-foreground underline decoration-dotted underline-offset-2">
                           Rent ({nights} night{nights !== 1 ? 's' : ''})
                         </span>
-                        <span>{trip.pricing.currency} {rentAmount.toLocaleString()}</span>
+                        <span>{formatMoney(rentAmount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground underline decoration-dotted underline-offset-2">
                           VAT ({vatRate}%)
                         </span>
-                        <span>{trip.pricing.currency} {vatAmount.toLocaleString()}</span>
+                        <span>{formatMoney(vatAmount)}</span>
                       </div>
                       <div className="flex justify-between text-base font-bold text-foreground pt-1">
                         <span>Stay charges</span>
-                        <span>{trip.pricing.currency} {rentTotal.toLocaleString()}</span>
+                        <span>{formatMoney(rentTotal)}</span>
                       </div>
                     </div>
 
@@ -1484,7 +1499,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                     <div className="flex justify-between items-baseline mb-6">
                       <span className="text-xl font-bold">Total</span>
                       <span className="text-xl font-bold">
-                        {trip.pricing.currency} {grandTotal.toLocaleString()}
+                        {formatMoney(grandTotal)}
                       </span>
                     </div>
 
@@ -1494,8 +1509,8 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                       <Button
                         onClick={() => {
                           setBookingData({
-                            checkInDate: checkInDate?.toISOString().split('T')[0],
-                            checkOutDate: checkOutDate?.toISOString().split('T')[0],
+                            checkInDate: (checkInDate ? format(checkInDate, 'yyyy-MM-dd') : undefined),
+                            checkOutDate: (checkOutDate ? format(checkOutDate, 'yyyy-MM-dd') : undefined),
                             guests,
                             cancellationPolicy: selectedCancellation,
                             totalAmount: grandTotal,
@@ -1512,8 +1527,8 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                         variant="outline"
                         onClick={() => {
                           setBookingData({
-                            checkInDate: checkInDate?.toISOString().split('T')[0],
-                            checkOutDate: checkOutDate?.toISOString().split('T')[0],
+                            checkInDate: (checkInDate ? format(checkInDate, 'yyyy-MM-dd') : undefined),
+                            checkOutDate: (checkOutDate ? format(checkOutDate, 'yyyy-MM-dd') : undefined),
                             guests,
                             cancellationPolicy: selectedCancellation,
                             totalAmount: grandTotal,
@@ -1548,7 +1563,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
           <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border p-4 z-50 flex items-center justify-between  safe-area-bottom">
             <div>
               <span className="text-lg font-bold text-primary">
-                {trip.pricing.currency} {trip.pricing.from.toLocaleString()}
+                {formatMoney(trip.pricing.from)}
               </span>
               <span className="text-muted-foreground">/Monthly</span>
             </div>
@@ -1614,7 +1629,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                   {/* Price */}
                   <div className="mb-6">
                     <span className="text-3xl font-bold text-primary">
-                      {trip.pricing.currency} {trip.pricing.from.toLocaleString()}
+                      {formatMoney(trip.pricing.from)}
                     </span>
                     <span className="text-muted-foreground ml-2 text-lg">/Monthly</span>
                   </div>
@@ -1705,7 +1720,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                           </div>
                           <span className="font-medium text-sm">Non-Refundable</span>
                         </div>
-                        <span className="text-sm font-semibold">{trip.pricing.currency} {trip.pricing.from}</span>
+                        <span className="text-sm font-semibold">{formatMoney(trip.pricing.from)}</span>
                       </div>
                     </div>
                   </div>
@@ -1716,7 +1731,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm font-medium text-muted-foreground">Total Estimate</span>
                     <span className="text-xl font-bold">
-                      {trip.pricing.currency} {selectedCancellation === 'refundable' ? Math.round(trip.pricing.from * 1.1) : trip.pricing.from}
+                      {formatMoney(selectedCancellation === 'refundable' ? Math.round(trip.pricing.from * 1.1) : trip.pricing.from)}
                     </span>
                   </div>
 
@@ -1724,8 +1739,8 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                     <Button
                       onClick={() => {
                         setBookingData({
-                          checkInDate: checkInDate?.toISOString().split('T')[0],
-                          checkOutDate: checkOutDate?.toISOString().split('T')[0],
+                          checkInDate: (checkInDate ? format(checkInDate, 'yyyy-MM-dd') : undefined),
+                          checkOutDate: (checkOutDate ? format(checkOutDate, 'yyyy-MM-dd') : undefined),
                           guests,
                           cancellationPolicy: selectedCancellation,
                           totalAmount: selectedCancellation === 'refundable' ? Math.round(trip.pricing.from * 1.1) : trip.pricing.from,
@@ -1740,8 +1755,8 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                     <Button
                       onClick={() => {
                         setBookingData({
-                          checkInDate: checkInDate?.toISOString().split('T')[0],
-                          checkOutDate: checkOutDate?.toISOString().split('T')[0],
+                          checkInDate: (checkInDate ? format(checkInDate, 'yyyy-MM-dd') : undefined),
+                          checkOutDate: (checkOutDate ? format(checkOutDate, 'yyyy-MM-dd') : undefined),
                           guests,
                           cancellationPolicy: selectedCancellation,
                           totalAmount: selectedCancellation === 'refundable' ? Math.round(trip.pricing.from * 1.1) : trip.pricing.from,
@@ -1796,15 +1811,15 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between items-start">
                     <span className="text-muted-foreground">Rent ({nights} nights)</span>
-                    <span>{trip.pricing.currency} {rentAmount.toLocaleString()}</span>
+                    <span>{formatMoney(rentAmount)}</span>
                   </div>
                   <div className="flex justify-between items-start">
                     <span className="text-muted-foreground">VAT ({vatRate}%)</span>
-                    <span>{trip.pricing.currency} {vatAmount.toLocaleString()}</span>
+                    <span>{formatMoney(vatAmount)}</span>
                   </div>
                   <div className="flex justify-between items-start font-bold text-foreground">
                     <span>Stay charges</span>
-                    <span>{trip.pricing.currency} {rentTotal.toLocaleString()}</span>
+                    <span>{formatMoney(rentTotal)}</span>
                   </div>
                 </div>
 
@@ -1816,15 +1831,15 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                     <div>
                       <span className="text-muted-foreground block">Total charges</span>
                       <span className="text-xs text-muted-foreground block mt-0.5">
-                        {trip.pricing.currency} {rentTotal.toLocaleString()} for {nights} night{nights !== 1 ? 's' : ''}
+                        {formatMoney(rentTotal)} for {nights} night{nights !== 1 ? 's' : ''}
                       </span>
                     </div>
-                    <span>{trip.pricing.currency} {rentTotal.toLocaleString()}</span>
+                    <span>{formatMoney(rentTotal)}</span>
                   </div>
 
                   <div className="flex justify-between items-start">
                     <span className="text-muted-foreground">Booking fee</span>
-                    <span>{trip.pricing.currency} {(trip.pricing.fees?.bookingFee || 0).toLocaleString()}</span>
+                    <span>{formatMoney((trip.pricing.fees?.bookingFee || 0))}</span>
                   </div>
 
                   <div className="flex justify-between items-start">
@@ -1832,12 +1847,12 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                       <span className="text-muted-foreground block">Exit cleaning & restocking fee</span>
                       <span className="text-xs text-muted-foreground block mt-0.5">Supplies, linens, towels</span>
                     </div>
-                    <span>{trip.pricing.currency} {(trip.pricing.fees?.exitCleaningFee || 0).toLocaleString()}</span>
+                    <span>{formatMoney((trip.pricing.fees?.exitCleaningFee || 0))}</span>
                   </div>
 
                   <div className="flex justify-between items-start">
                     <span className="text-muted-foreground">Tourism fee</span>
-                    <span>{trip.pricing.currency} {(trip.pricing.fees?.tourismFee || 0).toLocaleString()}</span>
+                    <span>{formatMoney((trip.pricing.fees?.tourismFee || 0))}</span>
                   </div>
 
                   <div className="flex justify-between items-start">
@@ -1845,7 +1860,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                       <span className="text-muted-foreground block">Refundable security deposit</span>
                       <span className="text-xs text-muted-foreground block mt-0.5">Refunded if no damage is discovered during inspection</span>
                     </div>
-                    <span>{trip.pricing.currency} {(trip.pricing.fees?.securityDeposit || 0).toLocaleString()}</span>
+                    <span>{formatMoney((trip.pricing.fees?.securityDeposit || 0))}</span>
                   </div>
                 </div>
 
@@ -1855,7 +1870,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                 <div className="flex justify-between items-baseline mb-6">
                   <span className="text-lg font-bold">Total</span>
                   <span className="text-lg font-bold text-primary">
-                    {trip.pricing.currency} {grandTotal.toLocaleString()}
+                    {formatMoney(grandTotal)}
                   </span>
                 </div>
 
@@ -1899,7 +1914,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                   </div>
                   <div className="flex justify-between pt-2 border-t">
                     <span className="font-semibold">Total Amount:</span>
-                    <span className="font-bold text-primary">{trip.pricing.currency} {grandTotal.toLocaleString()}</span>
+                    <span className="font-bold text-primary">{formatMoney(serverQuote?.total ?? grandTotal)}</span>
                   </div>
                 </div>
               </div>
@@ -1912,7 +1927,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                     id="name"
                     value={customerInfo.name}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                    placeholder="John Doe"
+                    placeholder="Your full name"
                     className="mt-1"
                   />
                 </div>
@@ -1934,7 +1949,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                     type="tel"
                     value={customerInfo.phone}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                    placeholder="+971 50 123 4567"
+                    placeholder="+91 98765 43210"
                     className="mt-1"
                   />
                 </div>
@@ -1944,14 +1959,12 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
               <div className="pt-4">
                 <PaymentButton
                   propertyId={id}
-                  amount={grandTotal}
                   customerName={customerInfo.name}
                   customerEmail={customerInfo.email}
                   customerPhone={customerInfo.phone}
-                  checkInDate={checkInDate?.toISOString().split('T')[0]}
-                  checkOutDate={checkOutDate?.toISOString().split('T')[0]}
+                  checkInDate={(checkInDate ? format(checkInDate, 'yyyy-MM-dd') : undefined)}
+                  checkOutDate={(checkOutDate ? format(checkOutDate, 'yyyy-MM-dd') : undefined)}
                   guests={guests}
-                  description={`Booking for ${trip.title}`}
                   className="w-full"
                   disabled={!customerInfo.name || !customerInfo.email}
                 >
@@ -1959,7 +1972,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                 </PaymentButton>
                 
                 <p className="text-xs text-muted-foreground text-center mt-3">
-                  You will be redirected to TotalPay secure checkout
+                  Secure payment by Razorpay. UPI, cards, netbanking and wallets accepted.
                 </p>
               </div>
             </div>
@@ -2000,7 +2013,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                   <div className="flex justify-between items-baseline mb-3">
                     <span className="font-bold text-foreground">Due now</span>
                     <span className="font-bold text-foreground">
-                      {trip.pricing.currency} {grandTotal.toLocaleString()}
+                      {formatMoney(grandTotal)}
                     </span>
                   </div>
 
@@ -2010,27 +2023,27 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Rent</span>
-                        <span>{trip.pricing.currency} {rentAmount.toLocaleString()}</span>
+                        <span>{formatMoney(rentAmount)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">VAT</span>
-                        <span>{trip.pricing.currency} {vatAmount.toLocaleString()}</span>
+                        <span>{formatMoney(vatAmount)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Tourism fee</span>
-                        <span>{trip.pricing.currency} {(trip.pricing.fees?.tourismFee || 0).toLocaleString()}</span>
+                        <span>{formatMoney((trip.pricing.fees?.tourismFee || 0))}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Booking fee</span>
-                        <span>{trip.pricing.currency} {(trip.pricing.fees?.bookingFee || 0).toLocaleString()}</span>
+                        <span>{formatMoney((trip.pricing.fees?.bookingFee || 0))}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Exit cleaning & restocking fee</span>
-                        <span>{trip.pricing.currency} {(trip.pricing.fees?.exitCleaningFee || 0).toLocaleString()}</span>
+                        <span>{formatMoney((trip.pricing.fees?.exitCleaningFee || 0))}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Security deposit</span>
-                        <span>{trip.pricing.currency} {(trip.pricing.fees?.securityDeposit || 0).toLocaleString()}</span>
+                        <span>{formatMoney((trip.pricing.fees?.securityDeposit || 0))}</span>
                       </div>
                     </div>
                   </div>
@@ -2043,7 +2056,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
 
                   <div className="mb-1">
                     <span className="text-foreground">
-                      Receive your {trip.pricing.currency} {(trip.pricing.fees?.securityDeposit || 0).toLocaleString()} deposit back
+                      Receive your {formatMoney((trip.pricing.fees?.securityDeposit || 0))} deposit back
                     </span>
                   </div>
                   <p className="text-muted-foreground text-sm">

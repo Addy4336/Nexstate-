@@ -1,4 +1,4 @@
-import { brand } from "@nexstate/brand";
+import { brand, formatMoney } from "@nexstate/brand";
 import { supabaseAdmin } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -283,7 +283,7 @@ export default async function RentalsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-emerald-600">
-                            ${stats.total_revenue.toFixed(2)}
+                            {formatMoney(stats.total_revenue)}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             From {stats.total_rentals} rentals
@@ -431,7 +431,7 @@ export default async function RentalsPage() {
                                         <div className="lg:w-48 bg-muted/30 rounded-lg p-3">
                                             <div className="text-sm text-muted-foreground mb-1">Payment</div>
                                             <div className="text-2xl font-bold text-green-600">
-                                                ${Number(rental.amount).toFixed(2)}
+                                                {formatMoney(rental.amount)}
                                             </div>
                                             <div className="text-xs text-muted-foreground mt-1">
                                                 Order: {rental.order_number}
@@ -514,7 +514,7 @@ export default async function RentalsPage() {
                                         {/* Payment Info */}
                                         <div className="lg:w-32 text-right">
                                             <div className="text-lg font-bold">
-                                                ${Number(rental.amount).toFixed(2)}
+                                                {formatMoney(rental.amount)}
                                             </div>
                                             <div className="text-xs text-muted-foreground">
                                                 {format(new Date(rental.paid_at || rental.created_at), "MMM dd, yyyy")}
