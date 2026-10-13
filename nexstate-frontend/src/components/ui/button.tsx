@@ -19,8 +19,18 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Redesign variants
+        brass: "bg-brass text-ink hover:bg-[#c9a36b]",
+        light: "bg-ivory text-ink hover:bg-white",
+        "outline-light":
+          "border border-ivory/40 text-ivory hover:bg-ivory/10 hover:border-ivory/70",
+        "outline-dark":
+          "border border-ink/20 text-ink hover:bg-ink hover:text-ivory hover:border-ink",
       },
       size: {
+        // Pill CTA used across the marketing pages; trailing icon nudges right on hover.
+        xl: "h-12 rounded-full px-7 text-[15px] has-[>svg]:pr-6 [&>svg:last-child]:transition-transform hover:[&>svg:last-child]:translate-x-0.5",
+        pill: "h-10 rounded-full px-5 has-[>svg]:pr-4 [&>svg:last-child]:transition-transform hover:[&>svg:last-child]:translate-x-0.5",
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",

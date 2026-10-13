@@ -5,6 +5,7 @@ import "./globals.css";
 import "./prose.css";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/components/owner/FooterSection";
+import { MotionProvider } from "@/components/motion/MotionProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -48,9 +49,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${fraunces.variable} antialiased font-sans`}
       >
-        <Navbar />
-        {children}
-        <FooterSection />
+        <MotionProvider>
+          <Navbar />
+          {children}
+          <FooterSection />
+        </MotionProvider>
       </body>
     </html>
   );
