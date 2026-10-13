@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import "./prose.css";
-import Navbar from "@/components/Navbar";
-import FooterSection from "@/components/owner/FooterSection";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import { MotionProvider } from "@/components/motion/MotionProvider";
 
 const inter = Inter({
@@ -52,7 +52,7 @@ export default function RootLayout({
         <MotionProvider>
           <Navbar />
           {children}
-          <FooterSection />
+          <Footer />
         </MotionProvider>
       </body>
     </html>

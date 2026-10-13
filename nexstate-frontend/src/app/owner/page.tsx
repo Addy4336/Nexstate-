@@ -10,7 +10,6 @@ import ProcessSection from "@/components/owner/ProcessSection";
 import GrowthSection from "@/components/owner/GrowthSection";
 import TeamSection from "@/components/owner/TeamSection";
 import ConsultationSection from "@/components/owner/ConsultationSection";
-import FooterSection from "@/components/owner/FooterSection";
 import CalculatorsSection from "@/components/CalculatorsSection";
 
 export default function Home() {
@@ -31,7 +30,6 @@ export default function Home() {
       <GrowthSection />
       
       <TeamSection />
-      {/* <FooterSection /> */}
 
     </main>
   );
