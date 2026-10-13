@@ -41,6 +41,10 @@ function safeEqualHex(a: string, b: string): boolean {
 export const razorpayProvider: PaymentProvider = {
     id: "razorpay",
 
+    isConfigured(): boolean {
+        return Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+    },
+
     async createCheckout(p: CheckoutParams): Promise<ProviderCheckout> {
         const { keyId, keySecret, base } = config();
 

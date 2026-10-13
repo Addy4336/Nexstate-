@@ -1,5 +1,6 @@
 'use client';
 
+import { brand, formatMoney } from "@nexstate/brand";
 import { locationSlug } from "@/lib/slug";
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -62,12 +63,7 @@ function getPropertyImage(property: Property): string {
 }
 
 function formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(price);
+    return formatMoney(price);
 }
 
 function formatStatus(status: string): string {
@@ -158,7 +154,7 @@ function getNextAvailableDate(
 }
 
 function formatDate(date: Date): string {
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(brand.market.locale, {
         year: 'numeric',
         month: 'short',
         day: 'numeric'

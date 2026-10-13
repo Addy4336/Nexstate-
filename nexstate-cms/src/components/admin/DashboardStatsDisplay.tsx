@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
     Building2,
     Users,
-    DollarSign,
+    IndianRupee,
     TrendingUp,
     ArrowUpRight,
     ArrowDownRight,
@@ -45,7 +45,7 @@ export function DashboardStatsDisplay({ stats }: DashboardStatsDisplayProps) {
             value: formatCurrency(stats.monthlyRevenue),
             change: "+23%", // Mock trend
             trend: "up",
-            icon: DollarSign,
+            icon: IndianRupee,
             color: "text-primary",
             bgColor: "bg-primary/10",
         },

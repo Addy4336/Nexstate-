@@ -1,5 +1,6 @@
 "use client";
 
+import { brand } from "@nexstate/brand";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, User } from "lucide-react"; // Added User for author icon matching LatestBlogs if needed, or stick to current
 import { useState, useEffect } from "react";
@@ -36,7 +37,7 @@ const CMS_API_URL = process.env.NEXT_PUBLIC_CMS_API_URL || 'http://localhost:300
 function formatDate(dateString: string | null): string {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(brand.market.locale, {
         day: 'numeric',
         month: 'short',
         year: 'numeric',

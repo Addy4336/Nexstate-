@@ -2,7 +2,7 @@ import { brand, formatMoney } from "@nexstate/brand";
 import { supabaseAdmin } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Home, Users, Calendar, DollarSign, Mail, Phone, MapPin } from "lucide-react";
+import { Home, Users, Calendar, IndianRupee, Mail, Phone, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -279,7 +279,7 @@ export default async function RentalsPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                        <DollarSign className="h-4 w-4 text-emerald-600" />
+                        <IndianRupee className="h-4 w-4 text-emerald-600" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-emerald-600">

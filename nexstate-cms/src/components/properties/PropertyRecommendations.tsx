@@ -9,7 +9,7 @@ import Link from "next/link";
 import {
     TrendingUp,
     Sparkles,
-    DollarSign,
+    IndianRupee,
     MapPin,
     Bed,
     Bath,
@@ -251,7 +251,7 @@ export function PropertyRecommendations({
                 <section>
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <DollarSign className="w-5 h-5 text-amber-500" />
+                            <IndianRupee className="w-5 h-5 text-amber-500" />
                             <h2 className="text-xl font-bold">Budget-Friendly Options</h2>
                         </div>
                     </div>

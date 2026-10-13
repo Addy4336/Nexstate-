@@ -16,7 +16,7 @@ export function getPropertyImage(property: Property): string {
 }
 
 export function formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-AE', {
+    return new Intl.NumberFormat(brand.market.locale, {
         style: 'currency',
         currency: brand.market.currency,
         minimumFractionDigits: 0,

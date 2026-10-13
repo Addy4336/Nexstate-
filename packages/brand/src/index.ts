@@ -43,6 +43,8 @@ export const brand = {
         /** ISO 4217 code. Must match the currency your payment provider charges in. */
         currency: "INR",
         currencySymbol: "₹",
+        /** What the tax line is called on bills ("GST", "VAT", "Sales tax"). The rate is set per property. */
+        taxLabel: "GST",
         /** BCP 47 locale for number formatting (en-IN groups digits as 12,50,000). */
         locale: "en-IN",
     },

@@ -79,6 +79,7 @@ export const paymentsRoutes = new Elysia({ prefix: "/payments" })
         let provider;
         try {
             provider = getPaymentProvider();
+            if (!provider.isConfigured()) throw new PaymentConfigError("Payment provider credentials are missing");
         } catch (e) {
             console.error("Payment provider unavailable:", (e as Error).message);
             set.status = 503;

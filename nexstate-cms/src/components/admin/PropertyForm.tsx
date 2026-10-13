@@ -203,7 +203,7 @@ export function PropertyForm({ initialData }: PropertyFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="vat">VAT (%)</Label>
+                    <Label htmlFor="vat">{brand.market.taxLabel} (%)</Label>
                     <Input id="vat" name="vat" type="number" step="0.01" min="0" defaultValue={initialData?.vat || 5} />
                 </div>
 

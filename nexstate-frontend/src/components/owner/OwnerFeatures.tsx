@@ -3,7 +3,7 @@
 import { brand } from "@nexstate/brand";
 import { motion } from "framer-motion";
 import {
-    CircleDollarSign,
+    BadgeIndianRupee,
     Clock,
     Home,
     Brush,
@@ -20,7 +20,7 @@ const features = [
     {
         title: "High Rental Returns",
         description: `We with our unique co-living concept can provide up to ${brand.claims.yieldUplift} more on rental yield.`,
-        icon: CircleDollarSign,
+        icon: BadgeIndianRupee,
     },
     {
         title: "On-Time Rent",

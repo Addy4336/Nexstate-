@@ -35,7 +35,7 @@ import {
     SlidersHorizontal,
     X,
     Home,
-    DollarSign,
+    IndianRupee,
     Users,
     Sofa,
     Sparkles,
@@ -249,7 +249,7 @@ export function AdvancedFilters({
                         <AccordionItem value="budget" className="border rounded-lg px-4">
                             <AccordionTrigger className="hover:no-underline">
                                 <div className="flex items-center gap-2">
-                                    <DollarSign className="w-4 h-4" />
+                                    <IndianRupee className="w-4 h-4" />
                                     Budget
                                 </div>
                             </AccordionTrigger>

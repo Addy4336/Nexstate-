@@ -44,6 +44,8 @@ export type WebhookEvent =
 
 export interface PaymentProvider {
     readonly id: string;
+    /** True when all required credentials are present. Checked before any payment row is created. */
+    isConfigured(): boolean;
     createCheckout(params: CheckoutParams): Promise<ProviderCheckout>;
     /** Verifies the signed result the browser hands back after checkout. Returns null if the signature is invalid. */
     verifyClientPayment(data: Record<string, string | undefined>): VerifiedClientPayment | null;

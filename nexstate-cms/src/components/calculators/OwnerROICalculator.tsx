@@ -18,7 +18,7 @@ import {
 import {
     TrendingUp,
     TrendingDown,
-    DollarSign,
+    IndianRupee,
     Percent,
     Home,
     Calculator,
@@ -122,7 +122,7 @@ export function OwnerROICalculator() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <DollarSign className="w-5 h-5" />
+                                <IndianRupee className="w-5 h-5" />
                                 Operating Expenses (Annual)
                             </CardTitle>
                         </CardHeader>

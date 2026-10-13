@@ -210,7 +210,7 @@ export function calculateTenantCosts(inputs: TenantCostInputs): TenantCostResult
 // ==================== UTILITY FUNCTIONS ====================
 
 export function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat("en-AE", {
+    return new Intl.NumberFormat(brand.market.locale, {
         style: "currency",
         currency: brand.market.currency,
         minimumFractionDigits: 0,

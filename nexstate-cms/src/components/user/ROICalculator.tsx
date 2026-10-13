@@ -3,7 +3,7 @@
 import { brand, formatMoney } from "@nexstate/brand";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calculator, TrendingUp, DollarSign, Percent, Building } from "lucide-react";
+import { Calculator, TrendingUp, IndianRupee, Percent, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import Link from "next/link";
@@ -52,7 +52,7 @@ export function ROICalculator() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-accent" />
+                  <IndianRupee className="w-6 h-6 text-accent" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">15%</p>
@@ -74,7 +74,7 @@ export function ROICalculator() {
               <div>
                 <div className="flex justify-between mb-3">
                   <label className="text-sm font-medium flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-accent" />
+                    <IndianRupee className="w-4 h-4 text-accent" />
                     Monthly Rent ({brand.market.currencySymbol})
                   </label>
                   <span className="text-sm font-bold text-accent">{monthlyRent.toLocaleString()}</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Check, TrendingUp, DollarSign, BarChart3, Calculator } from 'lucide-react';
+import { Check, TrendingUp, IndianRupee, BarChart3, Calculator } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [
@@ -132,7 +132,7 @@ export default function LiveDataCalculator() {
                             {/* Net Income */}
                             <div className="bg-muted rounded-xl p-3 sm:p-4">
                                 <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">
-                                    <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    <IndianRupee className="w-3 h-3 sm:w-4 sm:h-4" />
                                     Net Income
                                 </div>
                                 <div className="text-xl sm:text-2xl font-bold text-foreground">${netIncome.toLocaleString()}</div>

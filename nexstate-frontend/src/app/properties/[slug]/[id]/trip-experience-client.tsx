@@ -1,8 +1,7 @@
 "use client";
 
-import { formatMoney } from "@nexstate/brand";
+import { brand, formatMoney } from "@nexstate/brand";
 import { API_BASE } from "@/lib/api";
-import { brand } from "@nexstate/brand";
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -1377,7 +1376,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                             Available From
                           </span>
                           <span className="font-bold text-sm text-amber-900 dark:text-amber-100">
-                            {minimumDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {minimumDate.toLocaleDateString(brand.market.locale, { day: 'numeric', month: 'long', year: 'numeric' })}
                           </span>
                         </div>
                       </div>
@@ -1472,7 +1471,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground underline decoration-dotted underline-offset-2">
-                          VAT ({vatRate}%)
+                          {brand.market.taxLabel} ({vatRate}%)
                         </span>
                         <span>{formatMoney(vatAmount)}</span>
                       </div>
@@ -1619,7 +1618,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                             Available From
                           </span>
                           <span className="font-bold text-sm text-amber-900 dark:text-amber-100">
-                            {minimumDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {minimumDate.toLocaleDateString(brand.market.locale, { day: 'numeric', month: 'long', year: 'numeric' })}
                           </span>
                         </div>
                       </div>
@@ -1814,7 +1813,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                     <span>{formatMoney(rentAmount)}</span>
                   </div>
                   <div className="flex justify-between items-start">
-                    <span className="text-muted-foreground">VAT ({vatRate}%)</span>
+                    <span className="text-muted-foreground">{brand.market.taxLabel} ({vatRate}%)</span>
                     <span>{formatMoney(vatAmount)}</span>
                   </div>
                   <div className="flex justify-between items-start font-bold text-foreground">
@@ -2026,7 +2025,7 @@ export default function TripExperienceClient({ trip, slug, id, rentalData }: Tri
                         <span>{formatMoney(rentAmount)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">VAT</span>
+                        <span className="text-muted-foreground">{brand.market.taxLabel}</span>
                         <span>{formatMoney(vatAmount)}</span>
                       </div>
                       <div className="flex justify-between">

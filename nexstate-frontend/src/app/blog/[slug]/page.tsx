@@ -129,7 +129,7 @@ async function getRelatedBlogs(excludeSlug: string, limit: number = 3): Promise<
 function formatDate(dateString: string | null): string {
     if (!dateString) return 'Not published';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(brand.market.locale, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

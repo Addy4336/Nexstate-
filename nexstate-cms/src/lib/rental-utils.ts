@@ -1,3 +1,4 @@
+import { brand } from "@nexstate/brand";
 import { RentalPeriod } from "@/types/property";
 
 /**
@@ -218,7 +219,7 @@ export function calculateRentalCost(
  */
 export function formatDateDisplay(date: string | Date): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString(brand.market.locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
