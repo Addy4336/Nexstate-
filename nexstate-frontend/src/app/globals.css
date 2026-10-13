@@ -3,11 +3,32 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * NexState "warm luxury" theme.
+ * Light site with deliberate dark feature sections (use `bg-ink text-ivory`).
+ * Brand palette is exposed as utilities (bg-forest, text-brass, bg-sand ...),
+ * and mapped onto the shadcn tokens below so existing bg-primary etc. follow it.
+ * Keep --primary in step with brand.themeColor in packages/brand.
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-outfit);
-  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-fraunces);
+  --font-display: var(--font-fraunces);
+
+  /* Brand palette */
+  --color-ink: #0e1a16;
+  --color-forest: #1f3a32;
+  --color-forest-700: #2c5045;
+  --color-brass: #b8925a;
+  --color-brass-deep: #8c6a3a; /* brass text on light backgrounds (AA) */
+  --color-brass-soft: #e9dcc6;
+  --color-sand: #efe7da;
+  --color-ivory: #faf7f2;
+  --color-stone: #5e6660;
+  --color-line: #e2d9cb;
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -37,82 +58,54 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-3xl: calc(var(--radius) + 14px);
+  --radius-4xl: calc(var(--radius) + 22px);
+
+  /* Warm, ink-tinted shadows */
+  --shadow-soft: 0 1px 2px rgb(14 26 22 / 0.04), 0 8px 24px -12px rgb(14 26 22 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(14 26 22 / 0.05), 0 24px 48px -20px rgb(14 26 22 / 0.28);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(44.741% 0.17229 263.994);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(82.11% 0.140 84.05);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(44.74% 0.172 263.98);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(44.74% 0.172 263.98);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --radius: 0.875rem;
+  --background: #faf7f2;
+  --foreground: #0e1a16;
+  --card: #ffffff;
+  --card-foreground: #0e1a16;
+  --popover: #ffffff;
+  --popover-foreground: #0e1a16;
+  --primary: #1f3a32;
+  --primary-foreground: #faf7f2;
+  --secondary: #b8925a;
+  --secondary-foreground: #0e1a16;
+  --muted: #f3ede3;
+  --muted-foreground: #5e6660;
+  --accent: #efe7da;
+  --accent-foreground: #0e1a16;
+  --destructive: #b42318;
+  --border: #e2d9cb;
+  --input: #d9cfbf;
+  --ring: #b8925a;
+  --chart-1: #1f3a32;
+  --chart-2: #b8925a;
+  --chart-3: #5e7d6f;
+  --chart-4: #d4b88a;
+  --chart-5: #8c6a3a;
+  --sidebar: #faf7f2;
+  --sidebar-foreground: #0e1a16;
+  --sidebar-primary: #1f3a32;
+  --sidebar-primary-foreground: #faf7f2;
+  --sidebar-accent: #efe7da;
+  --sidebar-accent-foreground: #0e1a16;
+  --sidebar-border: #e2d9cb;
+  --sidebar-ring: #b8925a;
 }
 
 @layer base {
@@ -120,8 +113,14 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
+    font-feature-settings: "ss01", "cv11";
   }
 
   h1,
@@ -131,5 +130,124 @@
   h5,
   h6 {
     @apply font-serif;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--color-brass-soft);
+    color: var(--color-ink);
+  }
+}
+
+@layer utilities {
+  /* Fluid type scale */
+  .text-display {
+    font-family: var(--font-display);
+    font-size: clamp(2.75rem, 1.6rem + 5vw, 5.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    font-weight: 400;
+  }
+  .text-headline {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 1.35rem + 2.6vw, 3.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+  .text-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.375rem, 1.15rem + 0.9vw, 1.875rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .text-lead {
+    font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+    line-height: 1.65;
+  }
+
+  /* Small-caps label with a brass rule: the signature detail */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-brass-deep);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 2rem;
+    height: 1px;
+    background: currentColor;
+  }
+  .eyebrow-light {
+    color: var(--color-brass);
+  }
+
+  .container-site {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 768px) {
+    .container-site {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-site {
+      padding-inline: 2rem;
+    }
+  }
+
+  .glass {
+    background: rgb(250 247 242 / 0.82);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  }
+  .glass-dark {
+    background: rgb(14 26 22 / 0.45);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+}
+
+/* Lenis smooth scroll (see components/motion/SmoothScroll) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

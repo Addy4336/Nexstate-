@@ -4,7 +4,7 @@ import { brand } from "@nexstate/brand";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, User } from "lucide-react"; // Added User for author icon matching LatestBlogs if needed, or stick to current
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link"; // Optional: if we want to make it clickable, but I'll stick to display first or wraps
 
 // Blog interface matching the CMS API response

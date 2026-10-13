@@ -31,7 +31,7 @@ export const brand = {
      * Hex colour used for the generated favicon / app icons and the browser theme colour.
      * Keep it in step with the --primary token in each app's globals.css.
      */
-    themeColor: "#2b4fa6",
+    themeColor: "#1f3a32",
 
     /** Public site URL of the frontend. Overridden by NEXT_PUBLIC_SITE_URL when set. */
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://nexstate.ai",

@@ -1,7 +1,7 @@
 "use client";
 
 import { brand } from "@nexstate/brand";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Check } from "lucide-react";
 
 const options = [

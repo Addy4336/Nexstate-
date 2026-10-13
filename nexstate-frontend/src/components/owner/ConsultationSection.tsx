@@ -388,7 +388,7 @@ export default function ConsultationSection() {
 }
 
 // Sub-component for Mobile Drawer Form to keep things clean
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from "motion/react";
 import { ChevronUp, X } from 'lucide-react';
 
 function MobileDrawerForm({ formData, handleChange, handleSubmit, isSubmitting }: {

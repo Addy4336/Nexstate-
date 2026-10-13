@@ -1,22 +1,23 @@
 import { brand } from "@nexstate/brand";
 import type { Metadata, Viewport } from "next";
-import { Outfit, Playfair_Display } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import "./prose.css";
 import Navbar from "@/components/Navbar";
-import ContactNavbar from "@/components/contact/ContactNavbar";
 import FooterSection from "@/components/owner/FooterSection";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+// Variable serif for headings; opsz axis keeps large display sizes refined.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
+  axes: ["opsz", "SOFT"],
 });
 
 export const metadata: Metadata = {
@@ -45,10 +46,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${outfit.variable} ${playfair.variable} antialiased font-sans`}
+        className={`${inter.variable} ${fraunces.variable} antialiased font-sans`}
       >
         <Navbar />
-        {/* <ContactNavbar /> */}
         {children}
         <FooterSection />
       </body>

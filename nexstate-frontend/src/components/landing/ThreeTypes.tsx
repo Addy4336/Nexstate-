@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ArrowRight, Users, Home, Key } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

@@ -3,7 +3,7 @@
 import { brand } from "@nexstate/brand";
 import Image from 'next/image';
 import { ArrowUpRight, Plus, Star, MapPin, Building2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from "motion/react";
 import Link from 'next/link';
 
 export default function Hero() {

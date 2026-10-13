@@ -2,7 +2,7 @@
 
 import { brand } from "@nexstate/brand";
 import { Bot, Armchair, Clock, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 const features = [

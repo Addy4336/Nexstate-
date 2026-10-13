@@ -3,7 +3,7 @@
 import { brand } from "@nexstate/brand";
 import { Zap, LayoutGrid, Briefcase, Heart, BrainCircuit, BarChart3 } from "lucide-react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
