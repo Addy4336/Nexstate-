@@ -43,6 +43,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
     const [title, setTitle] = useState(initialData?.title || "");
     const [slug, setSlug] = useState(initialData?.slug || "");
     const [content, setContent] = useState(initialData?.content || "");
+    const [status, setStatus] = useState<string>(initialData?.status || "draft");
 
     const [editorMode, setEditorMode] = useState<"richtext" | "markdown">(
         initialData?.content_format === "markdown" ? "markdown" : "richtext"
@@ -258,7 +259,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
                     <CardContent className="pt-6 space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="status">Status</Label>
-                            <Select name="status" defaultValue={initialData?.status || "draft"}>
+                            <Select name="status" value={status} onValueChange={setStatus}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select Status" />
                                 </SelectTrigger>
@@ -326,7 +327,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
                         ) : (
                             <Save className="w-4 h-4 mr-2" />
                         )}
-                        {initialData ? "Update" : "Publish"}
+                        {initialData ? "Update" : status === "published" ? "Publish" : "Save Draft"}
                     </Button>
                 </div>
             </div>

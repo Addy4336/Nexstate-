@@ -17,7 +17,7 @@ function generateSlug(title: string): string {
 }
 
 export async function createBlogPost(formData: FormData) {
-    await requireStaff();
+    const session = await requireStaff();
     const title = formData.get("title") as string;
     const rawContent = formData.get("content") as string;
     const excerpt = formData.get("excerpt") as string;
@@ -68,6 +68,8 @@ export async function createBlogPost(formData: FormData) {
                 status,
                 published_at,
                 content_format,
+                author_id: session.user.id,
+                author_name: session.user.name,
             });
 
         if (error) {

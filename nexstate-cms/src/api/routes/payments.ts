@@ -183,19 +183,14 @@ export const paymentsRoutes = new Elysia({ prefix: "/payments" })
      * Callback endpoint for payment status updates from TotalPay S2S
      * POST /api/payments/webhook
      */
-    .post("/webhook", async ({ body, headers }) => {
+    .post("/webhook", async ({ body, headers, set }) => {
         try {
-            console.log('='.repeat(60));
-            console.log('🔔 CALLBACK RECEIVED FROM TOTALPAY');
-            console.log('='.repeat(60));
-            console.log('Body:', JSON.stringify(body, null, 2));
-            console.log('='.repeat(60));
-            
             // Parse TotalPay Checkout callback payload
             const payload = parseWebhookPayload(body) as CheckoutCallbackData | null;
             
             if (!payload) {
-                console.error("Invalid callback payload:", body);
+                console.error("Invalid callback payload");
+                set.status = 400;
                 return 'ERROR';
             }
 
@@ -211,6 +206,7 @@ export const paymentsRoutes = new Elysia({ prefix: "/payments" })
             const isValidSignature = verifyCallbackSignature(payload);
             if (!isValidSignature) {
                 console.error("Invalid callback signature - rejecting");
+                set.status = 401;
                 return "ERROR";
             }
 
