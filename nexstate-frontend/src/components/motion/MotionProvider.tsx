@@ -21,6 +21,8 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
                     autoRaf: true,
                     lerp: 0.1,
                     smoothWheel: true,
+                    // Clicking an internal link should stop any scroll drift instead of carrying it onto the next page.
+                    stopInertiaOnNavigate: true,
                     anchors: { offset: -96 },
                     // Let dialogs, sheets, dropdowns and inner scroll areas scroll natively.
                     prevent: (node: HTMLElement) =>

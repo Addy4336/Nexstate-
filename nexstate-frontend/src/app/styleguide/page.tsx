@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { cityImages, imageProps, siteImages } from "@/lib/site-images";
 import { Button } from "@/components/ui/button";
 import { Container, Eyebrow, Section, SectionHeading } from "@/components/layout/Section";
 import {
@@ -168,6 +170,34 @@ export default function StyleguidePage() {
                     </TiltCard>
                 ))}
             </HorizontalScroller>
+
+            {/* Photography library */}
+            <Section tone="ivory" spacing="sm">
+                <SectionHeading eyebrow="Photography" title="The *photo* library" lead="Free-licence Unsplash photos, resized to WebP with blur placeholders. Credits live in public/images/CREDITS.md." />
+                <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    {Object.entries(siteImages)
+                        .filter(([k]) => !k.startsWith("city"))
+                        .map(([k, img]) => (
+                            <figure key={k} className="overflow-hidden rounded-xl bg-sand">
+                                <Image {...imageProps(img)} sizes="(min-width: 1024px) 25vw, 50vw" className="aspect-[4/3] w-full object-cover" />
+                                <figcaption className="px-3 py-2 text-xs text-stone">{k} · {img.credit.name}</figcaption>
+                            </figure>
+                        ))}
+                </div>
+                <h3 className="text-title mt-14">City cards</h3>
+                <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+                    {cityImages.map((c) => (
+                        <a key={c.slug} href="#" className="group relative block aspect-[3/4] overflow-hidden rounded-2xl">
+                            <Image {...imageProps(c.image)} sizes="(min-width: 1024px) 16vw, 50vw" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 p-4 text-ivory">
+                                <p className="font-serif text-xl">{c.name}</p>
+                                <p className="text-xs text-ivory/70">{c.blurb}</p>
+                            </div>
+                        </a>
+                    ))}
+                </div>
+            </Section>
 
             {/* Reveal directions */}
             <Section tone="white" spacing="sm">
