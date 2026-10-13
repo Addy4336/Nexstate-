@@ -17,6 +17,11 @@ export function imageProps(img: SiteImage) {
     return { src: img.src, alt: img.alt, width: img.width, height: img.height, placeholder: "blur" as const, blurDataURL: img.blurDataURL };
 }
 
+/** For <Image fill>: same as imageProps without the intrinsic size (fill and width/height are mutually exclusive). */
+export function fillProps(img: SiteImage) {
+    return { src: img.src, alt: img.alt, placeholder: "blur" as const, blurDataURL: img.blurDataURL };
+}
+
 export const siteImages = {
     heroVilla: {
         src: "/images/site/hero-villa.webp",

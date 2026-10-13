@@ -91,8 +91,8 @@ export const brand = {
     claims: {
         /** Owner-page headline: extra rental yield versus a traditional lease. */
         yieldUplift: "30%",
-        /** Portfolio value on the owner consultation page, e.g. "AED 2.5B+". "" hides the stat. */
-        assetsManaged: "AED 2.5B+",
+        /** Portfolio value on the owner consultation page, e.g. "₹250 Cr+". "" hides the stat. */
+        assetsManaged: "₹250 Cr+",
         /** Typical occupancy shown on owner pages. */
         occupancy: "98%",
         /** Longest lease offered to owners, in years. */

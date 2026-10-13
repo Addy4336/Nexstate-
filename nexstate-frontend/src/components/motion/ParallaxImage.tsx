@@ -14,6 +14,8 @@ interface ParallaxImageProps {
     imageClassName?: string;
     sizes?: string;
     priority?: boolean;
+    /** Tiny base64 preview (see lib/site-images) shown while the photo loads. */
+    blurDataURL?: string;
     /** How far the image drifts, as % of the frame height. 8-15 reads as depth without feeling floaty. */
     strength?: number;
     children?: React.ReactNode;
@@ -30,6 +32,7 @@ export function ParallaxImage({
     imageClassName,
     sizes = "100vw",
     priority,
+    blurDataURL,
     strength = 12,
     children,
 }: ParallaxImageProps) {
@@ -44,7 +47,7 @@ export function ParallaxImage({
                 className="absolute inset-x-0 will-change-transform"
                 style={enabled ? { y, top: `-${strength}%`, bottom: `-${strength}%` } : { top: 0, bottom: 0 }}
             >
-                <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={cn("object-cover", imageClassName)} />
+                <Image src={src} alt={alt} fill sizes={sizes} priority={priority} placeholder={blurDataURL ? "blur" : undefined} blurDataURL={blurDataURL} className={cn("object-cover", imageClassName)} />
             </motion.div>
             {children}
         </div>

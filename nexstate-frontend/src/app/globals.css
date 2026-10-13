@@ -206,6 +206,9 @@
   .eyebrow-light {
     color: var(--color-brass);
   }
+  .eyebrow-ivory {
+    color: rgb(250 247 242 / 0.9);
+  }
 
   .container-site {
     width: 100%;
@@ -237,6 +240,15 @@
 }
 
 /* Lenis styles are imported in components/motion/MotionProvider. */
+
+@keyframes scrollcue {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(300%);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

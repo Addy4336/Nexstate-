@@ -12,6 +12,9 @@ export interface Property {
     cover_image: string[] | null;
     featured: boolean;
     amenities: string[] | null;
+    /** Derived by the API from private rental data; dates only, never tenant details. */
+    is_currently_rented?: boolean;
+    rented_until?: string | null;
 }
 
 export interface ApiResponse {

@@ -13,6 +13,8 @@ interface ImageRevealProps {
     imageClassName?: string;
     sizes?: string;
     priority?: boolean;
+    /** Tiny base64 preview (see lib/site-images) shown while the photo loads. */
+    blurDataURL?: string;
     delay?: number;
     /** Direction the image is uncovered from. */
     from?: "bottom" | "top" | "left" | "right";
@@ -33,6 +35,7 @@ export function ImageReveal({
     imageClassName,
     sizes = "(min-width: 1024px) 50vw, 100vw",
     priority,
+    blurDataURL,
     delay = 0,
     from = "bottom",
 }: ImageRevealProps) {
@@ -59,7 +62,7 @@ export function ImageReveal({
                         show: { scale: 1, transition: { duration: 1.6, delay, ease: EASE_OUT } },
                     }}
                 >
-                    <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={cn("object-cover", imageClassName)} />
+                    <Image src={src} alt={alt} fill sizes={sizes} priority={priority} placeholder={blurDataURL ? "blur" : undefined} blurDataURL={blurDataURL} className={cn("object-cover", imageClassName)} />
                 </motion.div>
             </motion.div>
         </motion.div>
