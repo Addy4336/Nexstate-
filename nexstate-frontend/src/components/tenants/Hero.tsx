@@ -1,5 +1,6 @@
 "use client";
 
+import { brand, formatMoney } from "@nexstate/brand";
 import { locationSlug } from "@/lib/slug";
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -34,11 +35,11 @@ interface Property {
 
 // Price range options with min/max values
 const PRICE_RANGES = [
-    { value: '0-5000', label: 'Under AED 5,000', min: 0, max: 5000 },
-    { value: '5000-10000', label: 'AED 5,000 - 10,000', min: 5000, max: 10000 },
-    { value: '10000-20000', label: 'AED 10,000 - 20,000', min: 10000, max: 20000 },
-    { value: '20000-50000', label: 'AED 20,000 - 50,000', min: 20000, max: 50000 },
-    { value: '50000+', label: 'AED 50,000+', min: 50000, max: undefined },
+    { value: '0-25000', label: `Under ${formatMoney(25000)}`, min: 0, max: 25000 },
+    { value: '25000-50000', label: ` - ${formatMoney(50000)}`, min: 25000, max: 50000 },
+    { value: '50000-100000', label: ` - ${formatMoney(100000)}`, min: 50000, max: 100000 },
+    { value: '100000-250000', label: ` - ${formatMoney(250000)}`, min: 100000, max: 250000 },
+    { value: '250000+', label: `+`, min: 250000, max: undefined },
 ];
 
 // Helper functions
@@ -55,7 +56,7 @@ function getPropertyImage(property: Property): string {
 function formatPrice(price: number): string {
     return new Intl.NumberFormat('en-AE', {
         style: 'currency',
-        currency: 'AED',
+        currency: brand.market.currency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(price);
@@ -279,11 +280,11 @@ export default function Hero() {
                                         <SelectValue placeholder="Select Price" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="0-5000">Under AED 5,000</SelectItem>
-                                        <SelectItem value="5000-10000">AED 5,000 - 10,000</SelectItem>
-                                        <SelectItem value="10000-20000">AED 10,000 - 20,000</SelectItem>
-                                        <SelectItem value="20000-50000">AED 20,000 - 50,000</SelectItem>
-                                        <SelectItem value="50000+">AED 50,000+</SelectItem>
+                                        <SelectItem value="0-25000">Under {formatMoney(25000)}</SelectItem>
+                                        <SelectItem value="25000-50000">{formatMoney(25000)} - {formatMoney(50000)}</SelectItem>
+                                        <SelectItem value="50000-100000">{formatMoney(50000)} - {formatMoney(100000)}</SelectItem>
+                                        <SelectItem value="100000-250000">{formatMoney(100000)} - {formatMoney(250000)}</SelectItem>
+                                        <SelectItem value="250000+">{formatMoney(250000)}+</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

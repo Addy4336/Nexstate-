@@ -1,6 +1,6 @@
 "use client";
 
-import { brand } from "@nexstate/brand";
+import { brand, formatMoney } from "@nexstate/brand";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calculator, TrendingUp, DollarSign, Percent, Building } from "lucide-react";
@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import Link from "next/link";
 
 export function ROICalculator() {
-  const [monthlyRent, setMonthlyRent] = useState(8000);
+  const [monthlyRent, setMonthlyRent] = useState(40000);
   const [occupancy, setOccupancy] = useState(85);
   const [serviceFee, setServiceFee] = useState(15);
 
@@ -75,21 +75,21 @@ export function ROICalculator() {
                 <div className="flex justify-between mb-3">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-accent" />
-                    Monthly Rent (AED)
+                    Monthly Rent ({brand.market.currencySymbol})
                   </label>
                   <span className="text-sm font-bold text-accent">{monthlyRent.toLocaleString()}</span>
                 </div>
                 <Slider
                   value={[monthlyRent]}
                   onValueChange={(value) => setMonthlyRent(value[0])}
-                  min={2000}
-                  max={30000}
-                  step={500}
+                  min={10000}
+                  max={200000}
+                  step={2500}
                   className="[&_[role=slider]]:bg-accent [&_[role=slider]]:border-accent"
                 />
                 <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>AED 2,000</span>
-                  <span>AED 30,000</span>
+                  <span>{formatMoney(10000)}</span>
+                  <span>{formatMoney(200000)}</span>
                 </div>
               </div>
 
@@ -144,11 +144,11 @@ export function ROICalculator() {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="p-4 rounded-xl bg-secondary">
                     <p className="text-sm text-muted-foreground mb-1">Annual Revenue</p>
-                    <p className="text-xl font-bold text-foreground">AED {annualRevenue.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-foreground">{formatMoney(annualRevenue)}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-accent/10">
                     <p className="text-sm text-muted-foreground mb-1">Net Income</p>
-                    <p className="text-xl font-bold text-accent">AED {netIncome.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-accent">{formatMoney(netIncome)}</p>
                   </div>
                 </div>
                <Link href="/owner#owner-consultation-form">

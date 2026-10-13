@@ -1,4 +1,5 @@
 
+import { brand } from "@nexstate/brand";
 import Image from 'next/image';
 import Link from 'next/link';
 import { Bed, Bath, MapPin } from 'lucide-react';
@@ -17,7 +18,7 @@ export function getPropertyImage(property: Property): string {
 export function formatPrice(price: number): string {
     return new Intl.NumberFormat('en-AE', {
         style: 'currency',
-        currency: 'AED',
+        currency: brand.market.currency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(price);

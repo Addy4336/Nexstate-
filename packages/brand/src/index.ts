@@ -38,10 +38,13 @@ export const brand = {
 
     /** Where the agency operates. Drives currency formatting and "in <city>" copy. */
     market: {
-        city: "Dubai",
-        country: "United Arab Emirates",
-        currency: "AED",
-        locale: "en-AE",
+        city: "Bengaluru",
+        country: "India",
+        /** ISO 4217 code. Must match the currency your payment provider charges in. */
+        currency: "INR",
+        currencySymbol: "₹",
+        /** BCP 47 locale for number formatting (en-IN groups digits as 12,50,000). */
+        locale: "en-IN",
     },
 
     contact: {
@@ -49,7 +52,7 @@ export const brand = {
         email: "contact@nexstate.ai",
         ownersEmail: "owners@nexstate.ai",
         phone: "",
-        /** Digits only with country code, e.g. "971501234567". Used for tel: links. "" disables. */
+        /** Digits only with country code, e.g. "919876543210". Used for tel: links. "" disables. */
         phoneDigits: "",
         address: "",
         /** Google Maps embed URL (Share > Embed a map > copy the src). "" hides the map. */
@@ -102,6 +105,24 @@ export type Brand = typeof brand;
 /** Small helpers that keep JSX readable. */
 export const brandName = brand.name;
 export const brandNameUpper = brand.name.toUpperCase();
+
+/** Whole-currency amount as a string using the market's symbol and digit grouping, e.g. ₹12,50,000. */
+export function formatMoney(amount: number | string | null | undefined): string {
+    const n = Number(amount);
+    if (!Number.isFinite(n)) return `${brand.market.currencySymbol}0`;
+    return `${brand.market.currencySymbol}${n.toLocaleString(brand.market.locale, { maximumFractionDigits: 0 })}`;
+}
+
+/** Short form for tight spaces: ₹45K, ₹12L, ₹1.2Cr (Indian) or ₹1.2M depending on locale. */
+export function formatMoneyCompact(amount: number | string | null | undefined): string {
+    const n = Number(amount);
+    if (!Number.isFinite(n)) return `${brand.market.currencySymbol}0`;
+    const compact = new Intl.NumberFormat(brand.market.locale, {
+        notation: "compact",
+        maximumFractionDigits: 1,
+    }).format(n);
+    return `${brand.market.currencySymbol}${compact}`;
+}
 
 /** Builds a tel: href, or null when no phone is configured. */
 export function telHref(): string | null {

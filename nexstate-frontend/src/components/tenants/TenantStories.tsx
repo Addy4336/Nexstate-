@@ -1,6 +1,6 @@
 "use client";
 
-import { brand } from "@nexstate/brand";
+import { brand, formatMoney } from "@nexstate/brand";
 import { useState } from 'react';
 import Image from 'next/image';
 import { User, Briefcase, Heart, Quote, ArrowRight, Wallet, CheckCircle2 } from 'lucide-react';
@@ -14,7 +14,7 @@ const PERSONAS = [
         age: 28,
         origin: 'Arab',
         role: 'Aspiring Entrepreneur',
-        income: 'AED 11,000 / Month',
+        income: ` / Month`,
         image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=80', // Corporate look
         quote: "I need a place to focus on my work and network for my potential idea.",
         needs: [
@@ -35,7 +35,7 @@ const PERSONAS = [
         age: 25,
         origin: 'Indian',
         role: 'New to City',
-        income: 'AED 6,000 / Month',
+        income: ` / Month`,
         image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80', // Professional female
         quote: "New job, new city. I need safety, affordability, and to make new friends.",
         needs: [
@@ -56,7 +56,7 @@ const PERSONAS = [
         age: 31,
         origin: 'Russian',
         role: 'Job Seeker',
-        income: 'Savings: AED 15,000',
+        income: `Savings: ${formatMoney(75000)}`,
         image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&auto=format&fit=crop&q=80', // Professional male
         quote: "I need to cut down costs while looking for new opportunities.",
         needs: [
@@ -77,7 +77,7 @@ const PERSONAS = [
         age: 48,
         origin: 'Pakistani',
         role: 'Senior Accountant',
-        income: 'AED 9,000 / Month',
+        income: ` / Month`,
         image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&auto=format&fit=crop&q=80', // Mature professional
         quote: "I need to save securely for my family while having a decent place to stay.",
         needs: [

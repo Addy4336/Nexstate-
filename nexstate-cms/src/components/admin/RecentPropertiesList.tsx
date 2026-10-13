@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney } from "@nexstate/brand";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +43,7 @@ export function RecentPropertiesList({ properties }: RecentPropertiesListProps) 
                                     </div>
                                     <div className="text-left sm:text-right">
                                         <p className="font-medium">
-                                            AED {property.price.toLocaleString()}/mo
+                                            {formatMoney(property.price)}/mo
                                         </p>
                                         <span
                                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${property.status === "rented"

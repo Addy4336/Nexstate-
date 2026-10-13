@@ -1,5 +1,6 @@
 "use client";
 
+import { brand } from "@nexstate/brand";
 import { useState, useMemo } from "react";
 import {
     Home,
@@ -117,7 +118,7 @@ function calculateOwnerROI(inputs: OwnerROIInputs): OwnerROIResults {
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat("en-AE", {
         style: "currency",
-        currency: "AED",
+        currency: brand.market.currency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(amount);
@@ -128,16 +129,16 @@ function formatPercent(value: number): string {
 }
 
 const defaultInputs: OwnerROIInputs = {
-    purchasePrice: 1500000,
-    monthlyRent: 8000,
+    purchasePrice: 8000000,
+    monthlyRent: 40000,
     occupancyRate: 85,
     serviceFeePercent: 5,
-    annualMaintenance: 15000,
-    annualInsurance: 5000,
+    annualMaintenance: 36000,
+    annualInsurance: 10000,
     annualPropertyTax: 0,
     monthlyMortgage: 0,
-    downPayment: 375000,
-    otherAnnualExpenses: 5000,
+    downPayment: 1600000,
+    otherAnnualExpenses: 20000,
 };
 
 // --- Components ---
@@ -308,14 +309,14 @@ export default function OwnerROICalculator() {
                                     value={inputs.purchasePrice}
                                     onChange={(v) => updateInput("purchasePrice", v)}
                                     icon={Building}
-                                    suffix="AED"
+                                    suffix={brand.market.currencySymbol}
                                 />
                                 <InputGroup
                                     label="Monthly Rental Income"
                                     value={inputs.monthlyRent}
                                     onChange={(v) => updateInput("monthlyRent", v)}
                                     icon={Home}
-                                    suffix="AED"
+                                    suffix={brand.market.currencySymbol}
                                 />
                             </div>
                             <div className="grid sm:grid-cols-2 gap-6">
@@ -357,19 +358,19 @@ export default function OwnerROICalculator() {
                                     label="Maintenance"
                                     value={inputs.annualMaintenance}
                                     onChange={(v) => updateInput("annualMaintenance", v)}
-                                    suffix="AED"
+                                    suffix={brand.market.currencySymbol}
                                 />
                                 <InputGroup
                                     label="Insurance"
                                     value={inputs.annualInsurance}
                                     onChange={(v) => updateInput("annualInsurance", v)}
-                                    suffix="AED"
+                                    suffix={brand.market.currencySymbol}
                                 />
                                 <InputGroup
                                     label="Other/Misc"
                                     value={inputs.otherAnnualExpenses}
                                     onChange={(v) => updateInput("otherAnnualExpenses", v)}
-                                    suffix="AED"
+                                    suffix={brand.market.currencySymbol}
                                 />
                             </div>
                         </div>
@@ -388,14 +389,14 @@ export default function OwnerROICalculator() {
                                     value={inputs.downPayment}
                                     onChange={(v) => updateInput("downPayment", v)}
                                     icon={PiggyBank}
-                                    suffix="AED"
+                                    suffix={brand.market.currencySymbol}
                                 />
                                 <InputGroup
                                     label="Monthly Mortgage"
                                     value={inputs.monthlyMortgage}
                                     onChange={(v) => updateInput("monthlyMortgage", v)}
                                     icon={Wallet}
-                                    suffix="AED"
+                                    suffix={brand.market.currencySymbol}
                                 />
                             </div>
                         </div>

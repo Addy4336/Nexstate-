@@ -1,5 +1,6 @@
 "use client";
 
+import { brand } from "@nexstate/brand";
 import { useState, useMemo } from "react";
 import {
     Home,
@@ -126,21 +127,21 @@ function calculateTenantCosts(inputs: TenantCostInputs): TenantCostResults {
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat("en-AE", {
         style: "currency",
-        currency: "AED",
+        currency: brand.market.currency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(amount);
 }
 
 const defaultInputs: TenantCostInputs = {
-    monthlyRent: 5000,
+    monthlyRent: 30000,
     stayDurationMonths: 12,
-    securityDeposit: 5000,
-    monthlyMaintenance: 500,
+    securityDeposit: 90000,
+    monthlyMaintenance: 3000,
     monthlyUtilities: 400,
     monthlyParking: 300,
     moveInCosts: 1000,
-    brokerageFee: 2500,
+    brokerageFee: 30000,
 };
 
 // --- Components ---
@@ -223,7 +224,7 @@ export default function TenantCostCalculator() {
                                 <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Monthly Rent</label>
                             </div>
                             <div className="relative max-w-sm">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/30">AED</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/30">{brand.market.currencySymbol}</span>
                                 <input
                                     type="number"
                                     value={inputs.monthlyRent}

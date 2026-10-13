@@ -1,5 +1,6 @@
 "use client";
 
+import { brand } from "@nexstate/brand";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,16 +28,16 @@ import {
 } from "lucide-react";
 
 const defaultInputs: OwnerROIInputs = {
-    purchasePrice: 1500000,
-    monthlyRent: 8000,
+    purchasePrice: 8000000,
+    monthlyRent: 40000,
     occupancyRate: 85,
     serviceFeePercent: 5,
-    annualMaintenance: 15000,
-    annualInsurance: 5000,
+    annualMaintenance: 36000,
+    annualInsurance: 10000,
     annualPropertyTax: 0,
     monthlyMortgage: 0,
-    downPayment: 375000,
-    otherAnnualExpenses: 5000,
+    downPayment: 1600000,
+    otherAnnualExpenses: 20000,
 };
 
 export function OwnerROICalculator() {
@@ -83,7 +84,7 @@ export function OwnerROICalculator() {
                         </CardHeader>
                         <CardContent className="grid gap-6 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label>Purchase Price (AED)</Label>
+                                <Label>Purchase Price ({brand.market.currencySymbol})</Label>
                                 <Input
                                     type="number"
                                     value={inputs.purchasePrice}
@@ -91,7 +92,7 @@ export function OwnerROICalculator() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Monthly Rent (AED)</Label>
+                                <Label>Monthly Rent ({brand.market.currencySymbol})</Label>
                                 <Input
                                     type="number"
                                     value={inputs.monthlyRent}
@@ -140,7 +141,7 @@ export function OwnerROICalculator() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Maintenance (AED/year)</Label>
+                                <Label>Maintenance ({brand.market.currencySymbol}/year)</Label>
                                 <Input
                                     type="number"
                                     value={inputs.annualMaintenance}
@@ -148,7 +149,7 @@ export function OwnerROICalculator() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Insurance (AED/year)</Label>
+                                <Label>Insurance ({brand.market.currencySymbol}/year)</Label>
                                 <Input
                                     type="number"
                                     value={inputs.annualInsurance}
@@ -156,7 +157,7 @@ export function OwnerROICalculator() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Property Tax (AED/year)</Label>
+                                <Label>Property Tax ({brand.market.currencySymbol}/year)</Label>
                                 <Input
                                     type="number"
                                     value={inputs.annualPropertyTax}
@@ -164,7 +165,7 @@ export function OwnerROICalculator() {
                                 />
                             </div>
                             <div className="space-y-2 sm:col-span-2">
-                                <Label>Other Expenses (AED/year)</Label>
+                                <Label>Other Expenses ({brand.market.currencySymbol}/year)</Label>
                                 <Input
                                     type="number"
                                     value={inputs.otherAnnualExpenses}
@@ -187,7 +188,7 @@ export function OwnerROICalculator() {
                         </CardHeader>
                         <CardContent className="grid gap-6 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label>Down Payment (AED)</Label>
+                                <Label>Down Payment ({brand.market.currencySymbol})</Label>
                                 <Input
                                     type="number"
                                     value={inputs.downPayment}
@@ -195,7 +196,7 @@ export function OwnerROICalculator() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Monthly Mortgage Payment (AED)</Label>
+                                <Label>Monthly Mortgage Payment ({brand.market.currencySymbol})</Label>
                                 <Input
                                     type="number"
                                     value={inputs.monthlyMortgage}

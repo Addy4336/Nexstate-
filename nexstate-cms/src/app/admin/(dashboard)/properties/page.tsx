@@ -1,3 +1,4 @@
+import { formatMoney } from "@nexstate/brand";
 import { supabaseAdmin } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
@@ -100,7 +101,7 @@ export default async function PropertiesPage({ searchParams }: PropertiesPagePro
                             </div>
 
                             <div className="text-xl font-bold text-primary mt-auto">
-                                AED {property.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground">/mo</span>
+                                {formatMoney(property.price)}<span className="text-sm font-normal text-muted-foreground">/mo</span>
                             </div>
                         </div>
 

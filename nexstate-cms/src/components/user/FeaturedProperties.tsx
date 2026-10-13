@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney } from "@nexstate/brand";
 import { motion } from "framer-motion";
 import { MapPin, Bed, Bath, Square, ArrowRight, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,7 @@ interface FeaturedPropertiesProps {
 
 export function FeaturedProperties({ properties }: FeaturedPropertiesProps) {
   // Format price for display
-  const formatPrice = (price: number) => {
-    return price.toLocaleString();
-  };
+  const formatPrice = (price: number) => formatMoney(price);
 
   // Placeholder image URL - fallback for errors
   const PLACEHOLDER_IMAGE = "https://placehold.co/600x400/1a1a2e/ffffff?text=No+Image";
@@ -126,7 +125,7 @@ export function FeaturedProperties({ properties }: FeaturedPropertiesProps) {
                     {/* Price */}
                     <div className="absolute bottom-4 left-4">
                       <p className="text-primary-foreground font-bold text-xl">
-                        AED {formatPrice(property.price)}<span className="text-sm font-normal">/month</span>
+                        {formatPrice(property.price)}<span className="text-sm font-normal">/month</span>
                       </p>
                     </div>
                   </div>

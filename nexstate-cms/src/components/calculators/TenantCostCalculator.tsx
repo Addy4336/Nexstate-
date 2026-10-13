@@ -1,5 +1,6 @@
 "use client";
 
+import { brand } from "@nexstate/brand";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,14 +27,14 @@ import {
 } from "lucide-react";
 
 const defaultInputs: TenantCostInputs = {
-    monthlyRent: 5000,
+    monthlyRent: 30000,
     stayDurationMonths: 12,
-    securityDeposit: 5000,
-    monthlyMaintenance: 500,
+    securityDeposit: 90000,
+    monthlyMaintenance: 3000,
     monthlyUtilities: 400,
     monthlyParking: 300,
     moveInCosts: 1000,
-    brokerageFee: 2500,
+    brokerageFee: 30000,
 };
 
 export function TenantCostCalculator() {
@@ -78,7 +79,7 @@ export function TenantCostCalculator() {
                         </CardHeader>
                         <CardContent className="grid gap-6 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label>Monthly Rent (AED)</Label>
+                                <Label>Monthly Rent ({brand.market.currencySymbol})</Label>
                                 <Input
                                     type="number"
                                     value={inputs.monthlyRent}
@@ -86,7 +87,7 @@ export function TenantCostCalculator() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Security Deposit (AED)</Label>
+                                <Label>Security Deposit ({brand.market.currencySymbol})</Label>
                                 <Input
                                     type="number"
                                     value={inputs.securityDeposit}
@@ -168,7 +169,7 @@ export function TenantCostCalculator() {
                         </CardHeader>
                         <CardContent className="grid gap-6 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label>Move-in Costs (AED)</Label>
+                                <Label>Move-in Costs ({brand.market.currencySymbol})</Label>
                                 <Input
                                     type="number"
                                     value={inputs.moveInCosts}
@@ -179,7 +180,7 @@ export function TenantCostCalculator() {
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <Label>Brokerage Fee (AED)</Label>
+                                <Label>Brokerage Fee ({brand.market.currencySymbol})</Label>
                                 <Input
                                     type="number"
                                     value={inputs.brokerageFee}

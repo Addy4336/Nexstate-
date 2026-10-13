@@ -1,5 +1,6 @@
 "use client";
 
+import { brand } from "@nexstate/brand";
 import { useState } from "react";
 import { ImageUpload } from "./ImageUpload";
 import { VideoUpload } from "./VideoUpload";
@@ -155,7 +156,7 @@ export function PropertyForm({ initialData }: PropertyFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="price">Price (Monthly Rent AED)</Label>
+                    <Label htmlFor="price">Price (Monthly Rent {brand.market.currencySymbol})</Label>
                     <Input id="price" name="price" type="number" step="0.01" required defaultValue={initialData?.price} />
                 </div>
 
@@ -207,22 +208,22 @@ export function PropertyForm({ initialData }: PropertyFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="booking_fee">Booking Fee (AED)</Label>
+                    <Label htmlFor="booking_fee">Booking Fee ({brand.market.currencySymbol})</Label>
                     <Input id="booking_fee" name="booking_fee" type="number" step="0.01" min="0" defaultValue={initialData?.booking_fee} />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="exit_cleaning_fee">Exit Cleaning & Restocking Fee (AED)</Label>
+                    <Label htmlFor="exit_cleaning_fee">Exit Cleaning & Restocking Fee ({brand.market.currencySymbol})</Label>
                     <Input id="exit_cleaning_fee" name="exit_cleaning_fee" type="number" step="0.01" min="0" defaultValue={initialData?.exit_cleaning_fee} />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="tourism_fee">Tourism Fee (AED)</Label>
+                    <Label htmlFor="tourism_fee">Tourism Fee ({brand.market.currencySymbol})</Label>
                     <Input id="tourism_fee" name="tourism_fee" type="number" step="0.01" min="0" defaultValue={initialData?.tourism_fee} />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="security_deposit">Refundable Security Deposit (AED)</Label>
+                    <Label htmlFor="security_deposit">Refundable Security Deposit ({brand.market.currencySymbol})</Label>
                     <Input id="security_deposit" name="security_deposit" type="number" step="0.01" min="0" defaultValue={initialData?.security_deposit} />
                 </div>
 

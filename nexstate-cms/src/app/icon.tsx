@@ -1,5 +1,5 @@
-import { ImageResponse } from "next/og";
 import { brand } from "@nexstate/brand";
+import { ImageResponse } from "next/og";
 
 // Favicon generated from the brand config (initial on the theme colour).
 export const size = { width: 32, height: 32 };

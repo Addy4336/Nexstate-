@@ -1,13 +1,13 @@
 "use client";
 
-import { brand } from "@nexstate/brand";
+import { brand, formatMoney } from "@nexstate/brand";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Sparkles, Home, Calculator, HelpCircle, Building2, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const quickActions = [
-  { icon: Home, label: "Find properties", message: "Find a 2 bedroom apartment in Dubai Marina under 15000 AED" },
+  { icon: Home, label: "Find properties", message: `Find a 2 bedroom apartment in ${brand.market.city} under ${formatMoney(50000)}` },
   { icon: Calculator, label: "Calculate ROI", message: "What is the expected rental yield ROI for a luxury apartment?" },
   { icon: Calendar, label: "Book a tour", message: "I want to schedule a property tour for tomorrow" },
   { icon: HelpCircle, label: "How it works", message: `How does ${brand.name} work?` },
@@ -170,7 +170,7 @@ export function AIAssistant() {
                             </div>
                           </div>
                           <div className="font-bold text-primary">
-                            AED {prop.price?.toLocaleString()}
+                            {formatMoney(prop.price)}
                           </div>
                         </div>
                       ))}

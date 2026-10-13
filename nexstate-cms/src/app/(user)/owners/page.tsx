@@ -1,4 +1,4 @@
-import { brand, telHref } from "@nexstate/brand";
+import { brand, formatMoney, telHref } from "@nexstate/brand";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -119,11 +119,11 @@ export default function OwnerPortalPage() {
                         <CardContent className="space-y-4">
                             <div className="flex justify-between border-b border-white/20 pb-2">
                                 <span className="text-white/80">Property Value</span>
-                                <span className="font-bold">AED 1,200,000</span>
+                                <span className="font-bold">{formatMoney(9000000)}</span>
                             </div>
                             <div className="flex justify-between border-b border-white/20 pb-2">
                                 <span className="text-white/80">Monthly Rent</span>
-                                <span className="font-bold">AED 8,500</span>
+                                <span className="font-bold">{formatMoney(35000)}</span>
                             </div>
                             <div className="flex justify-between border-b border-white/20 pb-2">
                                 <span className="text-white/80">Occupancy Rate</span>

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoneyCompact } from "@nexstate/brand";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -77,10 +78,10 @@ export function PropertySearch() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Any Price</SelectItem>
-                            <SelectItem value="5000">AED 5k</SelectItem>
-                            <SelectItem value="8000">AED 8k</SelectItem>
-                            <SelectItem value="12000">AED 12k</SelectItem>
-                            <SelectItem value="20000">AED 20k+</SelectItem>
+                            <SelectItem value="25000">{formatMoneyCompact(25000)}</SelectItem>
+                            <SelectItem value="50000">{formatMoneyCompact(50000)}</SelectItem>
+                            <SelectItem value="100000">{formatMoneyCompact(100000)}</SelectItem>
+                            <SelectItem value="250000">{formatMoneyCompact(250000)}+</SelectItem>
                         </SelectContent>
                     </Select>
 

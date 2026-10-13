@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney, formatMoneyCompact } from "@nexstate/brand";
 import { motion } from "framer-motion";
 import {
     Building2,
@@ -18,12 +19,8 @@ interface DashboardStatsDisplayProps {
 
 export function DashboardStatsDisplay({ stats }: DashboardStatsDisplayProps) {
     // Format currency
-    const formatCurrency = (amount: number) => {
-        if (amount >= 1000000) {
-            return `AED ${(amount / 1000000).toFixed(1)}M`;
-        }
-        return `AED ${amount.toLocaleString()}`;
-    };
+    const formatCurrency = (amount: number) =>
+        amount >= 100000 ? formatMoneyCompact(amount) : formatMoney(amount);
     const statItems = [
         {
             title: "Total Properties",

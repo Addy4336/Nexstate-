@@ -1,7 +1,6 @@
 "use client";
 
 import BrandLogo from "@/components/BrandLogo";
-import { brand } from "@nexstate/brand";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {

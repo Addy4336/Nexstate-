@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney } from "@nexstate/brand";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Heart, MapPin, BedDouble, Bath, Maximize } from "lucide-react";
@@ -62,7 +63,7 @@ export function PropertyCard({ property, layout = "grid" }: PropertyCardProps) {
 
                     <div className="absolute bottom-4 left-4">
                         <p className="text-primary-foreground font-bold text-xl">
-                            AED {property.price.toLocaleString()}<span className="text-sm font-normal opacity-80">/month</span>
+                            {formatMoney(property.price)}<span className="text-sm font-normal opacity-80">/month</span>
                         </p>
                     </div>
                 </div>

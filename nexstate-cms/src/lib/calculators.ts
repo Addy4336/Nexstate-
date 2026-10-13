@@ -1,3 +1,4 @@
+import { brand } from "@nexstate/brand";
 /**
  * ROI Calculator Utility Functions
  * For both property owners and tenants
@@ -211,7 +212,7 @@ export function calculateTenantCosts(inputs: TenantCostInputs): TenantCostResult
 export function formatCurrency(amount: number): string {
     return new Intl.NumberFormat("en-AE", {
         style: "currency",
-        currency: "AED",
+        currency: brand.market.currency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(amount);

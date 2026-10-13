@@ -1,5 +1,5 @@
-import type { Metadata, Viewport } from "next";
 import { brand } from "@nexstate/brand";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import "./prose.css";

@@ -1,5 +1,5 @@
-import type { MetadataRoute } from "next";
 import { brand } from "@nexstate/brand";
+import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
     return {

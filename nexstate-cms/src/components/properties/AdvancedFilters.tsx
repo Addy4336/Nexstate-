@@ -1,5 +1,6 @@
 "use client";
 
+import { brand } from "@nexstate/brand";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -255,7 +256,7 @@ export function AdvancedFilters({
                             <AccordionContent className="space-y-4 pt-2">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label>Min (AED)</Label>
+                                        <Label>Min ({brand.market.currencySymbol})</Label>
                                         <Input
                                             type="number"
                                             value={filters.budgetMin}
@@ -263,7 +264,7 @@ export function AdvancedFilters({
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Max (AED)</Label>
+                                        <Label>Max ({brand.market.currencySymbol})</Label>
                                         <Input
                                             type="number"
                                             value={filters.budgetMax}

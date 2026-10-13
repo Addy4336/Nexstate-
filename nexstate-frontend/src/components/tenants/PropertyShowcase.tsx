@@ -1,6 +1,6 @@
 "use client";
 
-import { brand } from "@nexstate/brand";
+import { brand, formatMoney } from "@nexstate/brand";
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Play, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -60,7 +60,7 @@ export default function PropertyShowcase() {
                             rightCard: {
                                 // Try to show the second image for variety, otherwise the main image
                                 image: images[1] || images[0],
-                                price: p.price ? `${Number(p.price).toLocaleString()} AED` : "Ask for Price"
+                                price: p.price ? formatMoney(p.price) : "Ask for Price"
                             }
                         };
                     });

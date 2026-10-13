@@ -1,5 +1,5 @@
-import { ImageResponse } from "next/og";
 import { brand } from "@nexstate/brand";
+import { ImageResponse } from "next/og";
 
 // iOS home-screen icon generated from the brand config.
 export const size = { width: 180, height: 180 };

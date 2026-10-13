@@ -1,4 +1,4 @@
-import { brand } from "@nexstate/brand";
+import { brand, formatMoney } from "@nexstate/brand";
 import { getPropertyById } from "@/lib/properties";
 import { getImageUrl } from "@/lib/utils";
 import { notFound } from "next/navigation";
@@ -120,7 +120,7 @@ export default async function PropertyDetailPage({ params }: PropertyPageProps) 
                                 <div className="flex items-start gap-3">
                                     <div className="text-right">
                                         <div className="text-3xl font-bold text-primary">
-                                            AED {property.price.toLocaleString()}
+                                            {formatMoney(property.price)}
                                         </div>
                                         <div className="text-sm text-muted-foreground">per month</div>
                                     </div>

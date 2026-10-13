@@ -1,3 +1,4 @@
+import { formatMoney, formatMoneyCompact } from "@nexstate/brand";
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -92,13 +93,7 @@ function getPropertyImage(property: Property): string {
 
 // Format price for display
 function formatPrice(price: number): string {
-    if (price >= 1000000) {
-        return `AED ${(price / 1000000).toFixed(1)}M`;
-    }
-    if (price >= 1000) {
-        return `AED ${(price / 1000).toFixed(0)}K`;
-    }
-    return `AED ${price.toLocaleString()}`;
+    return price >= 1000 ? formatMoneyCompact(price) : formatMoney(price);
 }
 
 // Format location name for display

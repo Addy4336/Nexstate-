@@ -1,3 +1,4 @@
+import { brand } from "@nexstate/brand";
 import React from 'react';
 import TripExperienceClient from './trip-experience-client';
 import { notFound } from 'next/navigation';
@@ -191,7 +192,7 @@ function transformPropertyData(property: any) {
     ],
     pricing: {
       from: property.price || 2500,
-      currency: 'AED',
+      currency: brand.market.currency,
       fees: {
         vat: property.vat !== undefined ? property.vat : 5,
         bookingFee: property.booking_fee || 0,
