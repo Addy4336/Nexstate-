@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { AlertTriangle, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
 import Link from "next/link";
-import { formatMoney } from "@nexstate/brand";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { format, parseISO } from "date-fns";
+import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Loader2, Printer, XCircle } from "lucide-react";
+import { brand, formatMoney } from "@nexstate/brand";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Container } from "@/components/layout/Section";
 import { API_BASE } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface PaymentView {
     order_number: string;
@@ -26,6 +28,26 @@ interface PaymentView {
 const POLL_MS = 2500;
 const POLL_LIMIT = 12; // ~30s: enough for the provider's server callback to land
 
+/** "2026-11-01" -> "1 Nov 2026", read as a local date (new Date() would treat it as UTC). */
+const day = (d: string) => format(parseISO(d), "d MMM yyyy");
+
+function Shell({ children }: { children: React.ReactNode }) {
+    return (
+        <main className="min-h-[80svh] bg-sand pb-20 pt-32 md:pt-40">
+            <Container className="max-w-2xl">{children}</Container>
+        </main>
+    );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <div className="flex items-start justify-between gap-6 py-3.5">
+            <dt className="text-stone">{label}</dt>
+            <dd className="text-right font-medium text-ink">{children}</dd>
+        </div>
+    );
+}
+
 function PaymentStatusContent() {
     const searchParams = useSearchParams();
     const orderNumber = searchParams.get("order_number");
@@ -36,7 +58,7 @@ function PaymentStatusContent() {
 
     useEffect(() => {
         if (!orderNumber) {
-            setError("No order number provided");
+            setError("This link is missing its order number.");
             setLoading(false);
             return;
         }
@@ -63,7 +85,7 @@ function PaymentStatusContent() {
                 }
             } catch {
                 if (!cancelled) {
-                    setError("Failed to load payment details");
+                    setError("We couldn't load the payment details. Please refresh in a moment.");
                     setLoading(false);
                 }
             }
@@ -78,27 +100,32 @@ function PaymentStatusContent() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
+            <Shell>
+                <div className="flex min-h-[40svh] flex-col items-center justify-center gap-4 text-stone" role="status">
+                    <Loader2 className="size-8 animate-spin text-forest" aria-hidden="true" />
+                    Checking your payment…
+                </div>
+            </Shell>
         );
     }
 
     if (error || !payment) {
         return (
-            <div className="container max-w-2xl mx-auto px-4 py-16">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-red-600">We could not find this payment</CardTitle>
-                        <CardDescription>{error}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button asChild>
-                            <Link href="/">Go Home</Link>
+            <Shell>
+                <div className="rounded-3xl bg-white p-8 text-center shadow-soft md:p-12">
+                    <XCircle className="mx-auto size-12 text-destructive" aria-hidden="true" />
+                    <h1 className="text-headline mt-5">We couldn&apos;t find this payment</h1>
+                    <p className="text-lead mt-4 text-stone">{error}</p>
+                    <div className="mt-8 flex flex-wrap justify-center gap-3">
+                        <Button asChild size="xl">
+                            <Link href="/properties">Browse homes</Link>
                         </Button>
-                    </CardContent>
-                </Card>
-            </div>
+                        <Button asChild size="xl" variant="outline-dark">
+                            <Link href="/contact">Contact us</Link>
+                        </Button>
+                    </div>
+                </div>
+            </Shell>
         );
     }
 
@@ -109,7 +136,7 @@ function PaymentStatusContent() {
     const heading = paid
         ? bookingProblem
             ? "Payment received"
-            : "Payment successful"
+            : "You're booked in"
         : pending
           ? "Confirming your payment"
           : payment.status === "cancelled"
@@ -119,93 +146,98 @@ function PaymentStatusContent() {
     const subheading = paid
         ? bookingProblem
             ? "We received your payment, but we need to confirm your dates with you."
-            : "Thank you. Your booking is confirmed."
+            : "Thank you. Your payment went through and your dates are reserved."
         : pending
           ? "This usually takes a few seconds. You can keep this page open."
           : payment.status === "cancelled"
             ? "You were not charged."
-            : "No booking was made. If money was deducted, it is returned by your bank automatically.";
+            : "No booking was made. If money was deducted, your bank returns it automatically.";
 
     const Icon = paid ? (bookingProblem ? AlertTriangle : CheckCircle2) : pending ? Clock : XCircle;
-    const iconColor = paid ? (bookingProblem ? "text-amber-600" : "text-green-600") : pending ? "text-blue-600" : "text-red-600";
+    const tone = paid ? (bookingProblem ? "bg-amber-100 text-amber-700" : "bg-forest text-ivory") : pending ? "bg-sand text-brass-deep" : "bg-red-100 text-destructive";
 
     return (
-        <div className="container max-w-3xl mx-auto px-4 py-16">
-            <div className="text-center space-y-6">
-                <Icon className={`h-20 w-20 mx-auto ${iconColor}`} />
-                <h1 className="text-4xl font-bold">{heading}</h1>
-                <p className="text-lg text-muted-foreground">{subheading}</p>
-
-                {bookingProblem && (
-                    <div className="bg-amber-50 border border-amber-200 rounded p-4 text-left text-sm text-amber-900">
-                        <strong>Your dates may have just been taken by another booking.</strong> Our team will contact you
-                        shortly to offer alternative dates or a full refund. Please quote order{" "}
-                        <span className="font-mono">{payment.order_number}</span>.
-                    </div>
-                )}
-
-                <Card className="text-left mt-8">
-                    <CardHeader>
-                        <CardTitle>Payment details</CardTitle>
-                        <CardDescription>
-                            Order number: <span className="font-mono font-semibold">{payment.order_number}</span>
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div className="text-muted-foreground">Amount</div>
-                            <div className="font-semibold">{formatMoney(payment.amount)}</div>
-
-                            <div className="text-muted-foreground">Status</div>
-                            <div className="capitalize">{paid ? "paid" : payment.status}</div>
-
-                            <div className="text-muted-foreground">Date</div>
-                            <div>{new Date(payment.created_at).toLocaleString()}</div>
-
-                            {payment.provider_payment_id && (
-                                <>
-                                    <div className="text-muted-foreground">Transaction ID</div>
-                                    <div className="font-mono text-xs break-all">{payment.provider_payment_id}</div>
-                                </>
-                            )}
-                        </div>
-
-                        {payment.check_in_date && payment.check_out_date && (
-                            <div className="border-t pt-4 mt-4">
-                                <h3 className="font-semibold mb-3">Stay</h3>
-                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                    {payment.property && (
-                                        <>
-                                            <div className="text-muted-foreground">Property</div>
-                                            <div className="font-medium">{payment.property.title}</div>
-                                        </>
-                                    )}
-                                    <div className="text-muted-foreground">Check-in</div>
-                                    <div className="font-medium">{new Date(payment.check_in_date).toLocaleDateString()}</div>
-                                    <div className="text-muted-foreground">Check-out</div>
-                                    <div className="font-medium">{new Date(payment.check_out_date).toLocaleDateString()}</div>
-                                    {payment.guests && (
-                                        <>
-                                            <div className="text-muted-foreground">Guests</div>
-                                            <div className="font-medium">{payment.guests}</div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                <div className="flex gap-4 justify-center pt-6">
-                    <Button asChild size="lg">
-                        <Link href="/properties">Browse more properties</Link>
-                    </Button>
-                    <Button variant="outline" asChild size="lg">
-                        <Link href="/">Go home</Link>
-                    </Button>
-                </div>
+        <Shell>
+            <div className="text-center">
+                <span className={cn("mx-auto flex size-16 items-center justify-center rounded-full", tone)}>
+                    <Icon className={cn("size-8", pending && "animate-pulse")} aria-hidden="true" />
+                </span>
+                <h1 className="text-headline mt-6" aria-live="polite">
+                    {heading}
+                </h1>
+                <p className="text-lead mx-auto mt-4 max-w-md text-stone">{subheading}</p>
             </div>
-        </div>
+
+            {bookingProblem && (
+                <div role="alert" className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+                    <strong>Your dates may have just been taken by another booking.</strong> Our team will contact you shortly to
+                    offer alternative dates or a full refund. Please quote order <span className="font-mono">{payment.order_number}</span>.
+                </div>
+            )}
+
+            {/* Receipt */}
+            <section className="mt-10 rounded-3xl bg-white p-6 shadow-soft md:p-8" aria-labelledby="receipt">
+                <div className="flex items-baseline justify-between gap-4 border-b border-line pb-5">
+                    <h2 id="receipt" className="text-title">
+                        {paid ? "Booking receipt" : "Payment details"}
+                    </h2>
+                    <p className="font-serif text-2xl tracking-tight">{formatMoney(payment.amount)}</p>
+                </div>
+                <dl className="divide-y divide-line text-[15px]">
+                    {payment.property && <Row label="Home">{payment.property.title}</Row>}
+                    {payment.check_in_date && <Row label="Check-in">{day(payment.check_in_date)}</Row>}
+                    {payment.check_out_date && <Row label="Check-out">{day(payment.check_out_date)}</Row>}
+                    {payment.guests ? <Row label="Guests">{payment.guests}</Row> : null}
+                    <Row label="Status">
+                        <span className={cn("rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide", paid ? "bg-forest/10 text-forest" : pending ? "bg-sand text-brass-deep" : "bg-red-50 text-destructive")}>
+                            {paid ? "Paid" : payment.status}
+                        </span>
+                    </Row>
+                    <Row label="Order number">
+                        <span className="font-mono text-sm">{payment.order_number}</span>
+                    </Row>
+                    {payment.provider_payment_id && (
+                        <Row label="Transaction ID">
+                            <span className="break-all font-mono text-sm">{payment.provider_payment_id}</span>
+                        </Row>
+                    )}
+                    <Row label="Date">{format(new Date(payment.created_at), "d MMM yyyy, h:mm a")}</Row>
+                </dl>
+                {paid && (
+                    <p className="mt-5 text-sm text-stone">
+                        Any security deposit in this total is refunded after the move-out inspection. Questions? Write to{" "}
+                        {brand.contact.email ? (
+                            <a className="text-forest underline decoration-brass underline-offset-4" href={`mailto:${brand.contact.email}`}>
+                                {brand.contact.email}
+                            </a>
+                        ) : (
+                            "us"
+                        )}{" "}
+                        quoting your order number.
+                    </p>
+                )}
+            </section>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-3 print:hidden">
+                {payment.property && (
+                    <Button asChild size="xl">
+                        <Link href={`/properties/home/${payment.property.id}`}>
+                            View the home <ArrowRight />
+                        </Link>
+                    </Button>
+                )}
+                {paid && (
+                    <Button size="xl" variant="outline-dark" onClick={() => window.print()}>
+                        <Printer /> Print receipt
+                    </Button>
+                )}
+                {!paid && !pending && (
+                    <Button asChild size="xl" variant="outline-dark">
+                        <Link href="/properties">Browse homes</Link>
+                    </Button>
+                )}
+            </div>
+        </Shell>
     );
 }
 
@@ -213,9 +245,11 @@ export default function PaymentSuccessPage() {
     return (
         <Suspense
             fallback={
-                <div className="flex items-center justify-center min-h-[60vh]">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
+                <Shell>
+                    <div className="flex min-h-[40svh] items-center justify-center">
+                        <Loader2 className="size-8 animate-spin text-forest" aria-hidden="true" />
+                    </div>
+                </Shell>
             }
         >
             <PaymentStatusContent />
