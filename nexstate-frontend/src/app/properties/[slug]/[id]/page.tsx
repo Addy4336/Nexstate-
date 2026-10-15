@@ -1,261 +1,254 @@
-import { brand } from "@nexstate/brand";
-import React from 'react';
-import TripExperienceClient from './trip-experience-client';
-import { notFound } from 'next/navigation';
-import type { Metadata } from 'next';
-import { cache } from 'react';
-import { processImageUrls, getFallbackImageUrl } from '@/lib/image-utils';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { cache } from "react";
+import { ArrowRight, Bath, BedDouble, Building2, ChevronRight, MapPin, Maximize2, Sofa } from "lucide-react";
+import { brand, formatMoney } from "@nexstate/brand";
+import { Button } from "@/components/ui/button";
+import { Container, Eyebrow, Section, SectionHeading } from "@/components/layout/Section";
+import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import { PropertyCard } from "@/components/property/PropertyCard";
+import { Gallery } from "@/components/property/detail/Gallery";
+import { Booking } from "@/components/property/detail/Booking";
+import { ShareButton } from "@/components/property/detail/ShareButton";
+import { ExpandableText } from "@/components/property/detail/ExpandableText";
+import { amenityIcon } from "@/lib/amenity-icons";
+import { apiGet } from "@/lib/server-api";
+import { locationSlug } from "@/lib/slug";
+import { toPropertyDetail } from "@/lib/property-detail";
+import type { Property } from "@/types/property";
 
-interface TripExperiencePageProps {
-  params: Promise<{
-    slug: string;
-    id: string;
-  }>;
+interface PageProps {
+    params: Promise<{ slug: string; id: string }>;
 }
 
-// API base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_CMS_API_URL || 'http://localhost:3001';
+// Availability must be fresh, so the property itself is never cached.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getProperty = cache(async (id: string) => apiGet<any | null>(`/properties/${encodeURIComponent(id)}`, null, 0));
 
-// Fetch property data from API
-const getPropertyData = cache(async (id: string) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/properties/${id}`, {
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      console.error('Failed to fetch property:', response.status);
-      return null;
-    }
-
-    const result = await response.json();
-
-    if (!result.success || !result.data) {
-      console.error('Property not found or error:', result.error);
-      return null;
-    }
-
-    return result.data;
-  } catch (error) {
-    console.error('Error fetching property:', error);
-    return null;
-  }
-});
-// Transform API data to component format
-function transformPropertyData(property: any) {
-  // Get images - cover_image is text[], images is text[]
-  const images: string[] = [];
-
-  // Add cover images first (cover_image is an array)
-  if (property.cover_image && Array.isArray(property.cover_image)) {
-    images.push(...property.cover_image);
-  }
-
-  // Add additional images
-  if (property.images && Array.isArray(property.images)) {
-    images.push(...property.images);
-  }
-
-  // Process images: filter empty values, convert Google Drive URLs, remove duplicates
-  const uniqueImages = processImageUrls(images);
-
-  // Ensure we have at least 5 images for the gallery
-  const fallbackImage = getFallbackImageUrl();
-  while (uniqueImages.length < 5) {
-    uniqueImages.push(uniqueImages[0] || fallbackImage);
-  }
-
-  // Format location name
-  const formattedLocation = property.location
-    ? property.location.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())
-    : 'Dubai';
-
-  // Convert bedrooms number to text
-  const bedroomText = (() => {
-    const num = property.bedrooms;
-    if (num === 0) return 'Studio';
-    if (num === 1) return 'One';
-    if (num === 2) return 'Two';
-    if (num === 3) return 'Three';
-    if (num === 4) return 'Four';
-    if (num === 5) return 'Five';
-    return `${num}`;
-  })();
-
-  // Convert bathrooms number to text
-  const bathroomText = (() => {
-    const num = property.bathrooms;
-    if (num === 1) return 'One';
-    if (num === 2) return 'Two';
-    if (num === 3) return 'Three';
-    if (num === 4) return 'Four';
-    return `${num}`;
-  })();
-
-  // Parse amenities
-  const amenitiesList = property.amenities || [];
-  const insideAmenities = amenitiesList
-    .filter((a: string) => ['Central AC', 'Built-in Wardrobes', 'Study Room', 'Elevator'].some(i => a.includes(i)) ||
-      ['WiFi', 'TV', 'Kitchen', 'Bathroom', 'Bedroom', 'AC', 'Laundry'].some(i => a.toLowerCase().includes(i.toLowerCase())))
-    .map((a: string) => ({ icon: '✓', text: a }));
-
-  const outsideAmenities = amenitiesList
-    .filter((a: string) => ['Pool', 'Gym', 'Parking', 'Garden', 'Security', 'CCTV', 'BBQ', 'Beach', 'Golf', 'Play Area', 'Concierge'].some(i => a.includes(i)))
-    .map((a: string) => ({ icon: '✓', text: a }));
-
-  // If amenities are not categorized, distribute them
-  if (insideAmenities.length === 0 && outsideAmenities.length === 0) {
-    amenitiesList.forEach((a: string, index: number) => {
-      if (index % 2 === 0) {
-        insideAmenities.push({ icon: '✓', text: a });
-      } else {
-        outsideAmenities.push({ icon: '✓', text: a });
-      }
-    });
-  }
-
-  // Default amenities if none provided
-  const defaultInsideAmenities = [
-    { icon: '❄️', text: 'Air conditioning in all rooms' },
-    { icon: '📺', text: 'Smart TV with streaming services' },
-    { icon: '📶', text: 'High-speed WiFi internet' },
-    { icon: '🛁', text: 'Modern bathroom facilities' },
-  ];
-
-  const defaultOutsideAmenities = [
-    { icon: '🏊‍♂️', text: 'Swimming pool access' },
-    { icon: '🚗', text: 'Parking available' },
-    { icon: '🛡️', text: '24/7 Security' },
-  ];
-
-  return {
-    title: property.title || `Property in ${formattedLocation}`,
-    images: uniqueImages.slice(0, 5),
-    summary: {
-      location: formattedLocation,
-      propertyType: property.property_type
-        ? property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1)
-        : 'Villa',
-      bedrooms: bedroomText,
-      bathrooms: bathroomText,
-      area: property.area_sqft ? `${property.area_sqft.toLocaleString()} sqft` : '1,024 ft',
-      parking: property.parking || 'Available'
-    },
-    highlights: [
-      { icon: '🏠', text: `${property.property_type || 'Villa'} in ${formattedLocation}` },
-      { icon: '🛏️', text: `${property.bedrooms || 4} Bedrooms, ${property.bathrooms || 3} Bathrooms` },
-      { icon: '📐', text: property.area_sqft ? `${property.area_sqft.toLocaleString()} sqft of living space` : 'Spacious living area' },
-      { icon: '✨', text: property.furnishing === 'furnished' ? 'Fully furnished and ready to move in' : 'Ready for move in' },
-      { icon: '📍', text: `Prime location in ${formattedLocation}` },
-      { icon: '🔑', text: property.available_from ? `Available from ${new Date(property.available_from).toLocaleDateString()}` : 'Available now' }
-    ],
-    description: property.description || `Experience comfort in this beautiful ${property.property_type || 'property'} located in ${formattedLocation}. Perfect for those seeking quality living with modern amenities.`,
-    propertyRooms: [
-      {
-        room: 'Living Room',
-        description: 'Spacious living area',
-        images: uniqueImages.slice(1, 3),
-        amenities: ['Comfortable seating', 'Smart TV', 'Air conditioning']
-      },
-      {
-        room: 'Kitchen',
-        description: 'Fully equipped kitchen',
-        images: uniqueImages.slice(2, 4),
-        amenities: ['Full-size refrigerator', 'Cooking stove', 'Microwave']
-      },
-      {
-        room: 'Bedrooms',
-        description: `${property.bedrooms || 4} comfortable bedrooms`,
-        images: uniqueImages.slice(3, 5),
-        amenities: ['Quality beds', 'Air conditioning', 'Built-in wardrobes']
-      }
-    ],
-    insideAmenities: insideAmenities.length > 0 ? insideAmenities : defaultInsideAmenities,
-    outsideAmenities: outsideAmenities.length > 0 ? outsideAmenities : defaultOutsideAmenities,
-    availableFor: [
-      { icon: '👨‍💼', label: 'Single Men', description: 'Individual male guests welcome' },
-      { icon: '👩‍💼', label: 'Single Women', description: 'Female-friendly accommodation' },
-      { icon: '💑', label: 'Couples', description: 'Perfect for couples' },
-      { icon: '👨‍👩‍👧‍👦', label: 'Families', description: 'Family-friendly' }
-    ],
-    essentials: [
-      { icon: '🔑', label: 'Key Access' },
-      { icon: '🧼', label: 'Toiletries' },
-      { icon: '🛏️', label: 'Fresh Linens' },
-      { icon: '🧴', label: 'Towels' },
-    ],
-    faqs: [
-      'What is the minimum stay duration?',
-      'Is the property suitable for families?',
-      'What amenities are included?',
-      'How do I access the property?'
-    ],
-    pricing: {
-      from: property.price || 2500,
-      currency: brand.market.currency,
-      fees: {
-        vat: property.vat !== undefined ? property.vat : 5,
-        bookingFee: property.booking_fee || 0,
-        exitCleaningFee: property.exit_cleaning_fee || 0,
-        tourismFee: property.tourism_fee || 0,
-        securityDeposit: property.security_deposit || 0,
-      },
-      availableDates: [
-        {
-          dates: 'Current Month',
-          price: property.price || 2500,
-          available: true,
-          selected: true
-        },
-        {
-          dates: 'Next Month',
-          price: Math.round((property.price || 2500) * 0.95),
-          available: true,
-          selected: false
-        },
-        {
-          dates: 'In 2 Months',
-          price: Math.round((property.price || 2500) * 0.9),
-          available: true,
-          selected: false
-        }
-      ]
-    }
-  };
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { id } = await params;
+    const raw = await getProperty(id);
+    if (!raw) return { title: "Home not found" };
+    const p = toPropertyDetail(raw);
+    const description =
+        p.description.slice(0, 155) || `Furnished ${p.bedrooms}-bedroom home in ${p.location}, ${formatMoney(p.price)} per month.`;
+    return {
+        title: `${p.title}, ${p.area}`,
+        description,
+        openGraph: { title: p.title, description, images: p.images[0] ? [p.images[0]] : undefined },
+    };
 }
 
-
-export async function generateMetadata({ params }: TripExperiencePageProps): Promise<Metadata> {
-  const { id } = await params;
-  const property = await getPropertyData(id);
-  if (!property) return { title: 'Property not found' };
-  const description = (property.description || '').slice(0, 160) || undefined;
-  const cover = Array.isArray(property.cover_image) ? property.cover_image[0] : undefined;
-  return {
-    title: property.title,
-    description,
-    openGraph: { title: property.title, description, images: cover ? [cover] : undefined },
-  };
+function Fact({ icon: Icon, label, value }: { icon: typeof BedDouble; label: string; value: string }) {
+    return (
+        <div className="flex items-center gap-3 px-4 py-4 md:px-6">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sand text-forest">
+                <Icon className="size-[18px]" aria-hidden="true" />
+            </span>
+            <span>
+                <span className="block text-xs text-stone">{label}</span>
+                <span className="block whitespace-nowrap font-medium text-ink">{value}</span>
+            </span>
+        </div>
+    );
 }
 
-export default async function PropertyDetailsPage({ params }: TripExperiencePageProps) {
-  const { slug, id } = await params;
+export default async function PropertyPage({ params }: PageProps) {
+    const { id } = await params;
+    const raw = await getProperty(id);
+    if (!raw) notFound();
+    const p = toPropertyDetail(raw);
 
-  // Fetch property from API
-  const propertyData = await getPropertyData(id);
+    // Similar homes: same city first, then the rest.
+    const all = await apiGet<Property[]>("/properties?limit=50", [], 60);
+    const similar = all
+        .filter((x) => x.id !== p.id)
+        .sort((a, b) => Number(b.location.includes(p.city)) - Number(a.location.includes(p.city)))
+        .slice(0, 3);
 
-  // Use API data or fallback
-  if (!propertyData) notFound();
-  const property = transformPropertyData(propertyData);
+    const facts = [
+        { icon: BedDouble, label: "Bedrooms", value: String(p.bedrooms) },
+        { icon: Bath, label: "Bathrooms", value: String(p.bathrooms) },
+        p.areaSqft ? { icon: Maximize2, label: "Area", value: `${p.areaSqft.toLocaleString("en-IN")} sq ft` } : null,
+        p.propertyType ? { icon: Building2, label: "Type", value: p.propertyType } : null,
+        { icon: Sofa, label: "Furnishing", value: p.furnishing ? p.furnishing.replace(/^\w/, (c) => c.toUpperCase()) : "Fully furnished" },
+    ].filter(Boolean) as { icon: typeof BedDouble; label: string; value: string }[];
 
-  // Pass rental data to client component
-  const rentalData = propertyData ? {
-    status: propertyData.status || 'available',
-    currentRentalEnd: propertyData.rented_until || null,
-    currentRentalStart: null,
-    // Public API exposes booked date ranges only (no tenant details)
-    rentalPeriods: propertyData.booked_ranges || [],
-  } : null;
+    const glance = [
+        { label: "Monthly rent", value: formatMoney(p.price) },
+        { label: brand.market.taxLabel, value: `${p.fees.taxRate}% on rent` },
+        p.fees.securityDeposit > 0 ? { label: "Security deposit", value: `${formatMoney(p.fees.securityDeposit)}, refundable` } : null,
+        p.fees.exitCleaningFee > 0 ? { label: "Exit cleaning", value: formatMoney(p.fees.exitCleaningFee) } : null,
+        p.fees.bookingFee > 0 ? { label: "Booking fee", value: formatMoney(p.fees.bookingFee) } : null,
+        { label: "Minimum stay", value: `${brand.booking.minNights} nights` },
+    ].filter(Boolean) as { label: string; value: string }[];
 
-  return <TripExperienceClient trip={property} slug={slug} id={id} rentalData={rentalData} />;
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": p.propertyType && /villa|house/i.test(p.propertyType) ? "House" : "Apartment",
+        name: p.title,
+        description: p.description || undefined,
+        image: p.images.slice(0, 5),
+        numberOfRooms: p.bedrooms,
+        numberOfBathroomsTotal: p.bathrooms,
+        floorSize: p.areaSqft ? { "@type": "QuantitativeValue", value: p.areaSqft, unitCode: "FTK" } : undefined,
+        address: { "@type": "PostalAddress", addressLocality: p.area, addressRegion: p.city || undefined, addressCountry: "IN" },
+        amenityFeature: p.amenities.map((a) => ({ "@type": "LocationFeatureSpecification", name: a, value: true })),
+    };
+
+    return (
+        <main className="pb-28 lg:pb-0">
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+
+            {/* Title + gallery */}
+            <Container className="pt-28 md:pt-32">
+                <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-sm text-stone">
+                    <Link href="/properties" className="hover:text-ink">
+                        Homes
+                    </Link>
+                    {p.city && (
+                        <>
+                            <ChevronRight className="size-3.5" aria-hidden="true" />
+                            <Link href={`/properties?location=${encodeURIComponent(p.city)}`} className="hover:text-ink">
+                                {p.city}
+                            </Link>
+                        </>
+                    )}
+                    <ChevronRight className="size-3.5" aria-hidden="true" />
+                    <Link href={`/properties/${locationSlug(p.location)}`} className="hover:text-ink">
+                        {p.area}
+                    </Link>
+                </nav>
+
+                <div className="mt-5 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        {p.propertyType && <Eyebrow>{p.propertyType}</Eyebrow>}
+                        <h1 className="text-headline mt-3 max-w-3xl">{p.title}</h1>
+                        <p className="mt-3 flex items-center gap-1.5 text-stone">
+                            <MapPin className="size-4" aria-hidden="true" />
+                            {p.location}
+                        </p>
+                    </div>
+                    <ShareButton title={p.title} />
+                </div>
+
+                <div className="mt-8">
+                    <Gallery images={p.images} title={p.title} />
+                </div>
+            </Container>
+
+            {/* Details + booking */}
+            <Container className="grid gap-12 py-12 md:py-16 lg:grid-cols-12 lg:gap-14">
+                <div className="space-y-14 lg:col-span-7">
+                    <Reveal>
+                        <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-white sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 [&>*]:-mb-px [&>*]:-mr-px [&>*]:border-b [&>*]:border-r [&>*]:border-line">
+                            {facts.map((f) => (
+                                <Fact key={f.label} {...f} />
+                            ))}
+                        </div>
+                    </Reveal>
+
+                    {p.description && (
+                        <section aria-labelledby="about">
+                            <h2 id="about" className="text-title">
+                                About this home
+                            </h2>
+                            <div className="mt-4">
+                                <ExpandableText text={p.description} />
+                            </div>
+                        </section>
+                    )}
+
+                    {p.amenities.length > 0 && (
+                        <section aria-labelledby="amenities">
+                            <h2 id="amenities" className="text-title">
+                                What this home offers
+                            </h2>
+                            <RevealGroup className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2" stagger={0.05}>
+                                {p.amenities.map((a) => {
+                                    const Icon = amenityIcon(a);
+                                    return (
+                                        <RevealItem key={a} className="flex items-center gap-3 border-b border-line pb-4">
+                                            <Icon className="size-5 shrink-0 text-brass-deep" aria-hidden="true" />
+                                            <span className="text-[15px] text-ink">{a}</span>
+                                        </RevealItem>
+                                    );
+                                })}
+                            </RevealGroup>
+                        </section>
+                    )}
+
+                    <section aria-labelledby="pricing">
+                        <h2 id="pricing" className="text-title">
+                            Pricing at a glance
+                        </h2>
+                        <p className="mt-2 text-sm text-stone">
+                            Choose your dates to see the exact total. What you see there is what you pay.
+                        </p>
+                        <dl className="mt-6 divide-y divide-line rounded-2xl border border-line bg-white">
+                            {glance.map((g) => (
+                                <div key={g.label} className="flex items-center justify-between gap-4 px-5 py-4">
+                                    <dt className="text-stone">{g.label}</dt>
+                                    <dd className="text-right font-medium text-ink">{g.value}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </section>
+
+                    <section aria-labelledby="where">
+                        <h2 id="where" className="text-title">
+                            Where you&apos;ll be
+                        </h2>
+                        <p className="mt-2 text-stone">
+                            {p.area}
+                            {p.city && `, ${p.city}`}. The exact address is shared after booking.
+                        </p>
+                        <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-sand">
+                            <iframe
+                                title={`Map of ${p.location}`}
+                                src={`https://www.google.com/maps?q=${encodeURIComponent(p.location)}&z=13&output=embed`}
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                                className="block h-[320px] w-full border-0 grayscale-[35%]"
+                            />
+                        </div>
+                        <Link
+                            href={`/properties/${locationSlug(p.location)}`}
+                            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-forest underline decoration-brass underline-offset-4"
+                        >
+                            More homes in {p.area} <ArrowRight className="size-4" aria-hidden="true" />
+                        </Link>
+                    </section>
+                </div>
+
+                <aside className="lg:col-span-5 xl:col-span-4 xl:col-start-9" aria-label="Book this home">
+                    <Booking property={p} />
+                </aside>
+            </Container>
+
+            {similar.length > 0 && (
+                <Section tone="sand">
+                    <SectionHeading
+                        eyebrow="You might also like"
+                        title="More homes *nearby*"
+                        actions={
+                            <Button asChild size="pill" variant="outline-dark">
+                                <Link href="/properties">
+                                    All homes <ArrowRight />
+                                </Link>
+                            </Button>
+                        }
+                    />
+                    <RevealGroup className="mt-12 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3" stagger={0.1}>
+                        {similar.map((s) => (
+                            <RevealItem key={s.id}>
+                                <PropertyCard property={s} />
+                            </RevealItem>
+                        ))}
+                    </RevealGroup>
+                </Section>
+            )}
+        </main>
+    );
 }

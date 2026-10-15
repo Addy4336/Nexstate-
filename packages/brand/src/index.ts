@@ -78,6 +78,15 @@ export const brand = {
     /** Prefix for generated order numbers, e.g. NS-<timestamp>-<random>. */
     orderPrefix: "NS",
 
+    /** Booking rules shown on property pages. */
+    booking: {
+        /**
+         * Shortest stay the date picker allows. This is a website rule only:
+         * the CMS accepts any length, so set it to 1 to allow nightly stays.
+         */
+        minNights: 14,
+    },
+
     /** Name of the two service tiers shown on the tenant page. */
     tiers: {
         standard: "Standard",
