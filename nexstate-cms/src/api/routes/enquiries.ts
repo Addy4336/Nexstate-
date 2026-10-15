@@ -31,51 +31,10 @@ export const enquiriesRoutes = new Elysia({ prefix: "/enquiries" })
             return { success: false, error: "Failed to submit enquiry" };
         }
 
-        // If booking data is included, update property table
-        if (propertyId && propertyDetails?.bookingType === 'reservation' && propertyDetails.checkInDate && propertyDetails.checkOutDate) {
-            try {
-                // Get current property data
-                const { data: property, error: fetchError } = await supabaseAdmin
-                    .from("property")
-                    .select("rental_periods")
-                    .eq("id", propertyId)
-                    .single();
-
-                if (fetchError) {
-                    console.error("Error fetching property:", fetchError);
-                } else {
-                    // Add new rental period to the array
-                    const newRentalPeriod = {
-                        start_date: propertyDetails.checkInDate,
-                        end_date: propertyDetails.checkOutDate,
-                        tenant_info: `${name} (${email})`,
-                        amount: propertyDetails.totalAmount || 0,
-                        status: "active",
-                        guests: propertyDetails.guests || 1,
-                        created_at: new Date().toISOString(),
-                    };
-
-                    const updatedRentalPeriods = [...(property?.rental_periods || []), newRentalPeriod];
-
-                    // Update property with rental info
-                    const { error: updateError } = await supabaseAdmin
-                        .from("property")
-                        .update({
-                            status: "rented",
-                            current_rental_start: propertyDetails.checkInDate,
-                            current_rental_end: propertyDetails.checkOutDate,
-                            rental_periods: updatedRentalPeriods,
-                        })
-                        .eq("id", propertyId);
-
-                    if (updateError) {
-                        console.error("Error updating property:", updateError);
-                    }
-                }
-            } catch (err) {
-                console.error("Error processing booking:", err);
-            }
-        }
+        // An enquiry never books dates. This endpoint is public and unpaid, so letting it write
+        // rental_periods would let anyone block any home's calendar. Dates the visitor mentions are
+        // kept in property_details for the team; bookings are created only by a verified payment
+        // (payments/settle -> book_property_period) or by staff in the admin.
 
         return { success: true, message: "Enquiry submitted successfully" };
     }, {

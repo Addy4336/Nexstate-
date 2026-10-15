@@ -96,7 +96,7 @@ export function EnquiryDialog({ isOpen, onClose, propertyId, propertyTitle, prop
                               guests: bookingData.guests,
                               cancellationPolicy: bookingData.cancellationPolicy,
                               totalAmount: bookingData.totalAmount,
-                              bookingType: "reservation",
+                              bookingType: "interested_dates",
                           }
                         : null,
                 }),
