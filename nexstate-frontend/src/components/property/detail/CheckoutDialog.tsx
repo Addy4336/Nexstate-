@@ -56,17 +56,25 @@ export function CheckoutDialog({ open, onOpenChange, property, checkIn, checkOut
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [touched, setTouched] = useState({ name: false, email: false });
+    // True while the Razorpay window is open: the dialog stays mounted but stops being modal (see PaymentButton).
+    const [paying, setPaying] = useState(false);
+    const keepOpen = (e: Event) => {
+        if (paying) e.preventDefault();
+    };
 
     const nameError = name.trim().length < 2 ? "Please enter your full name." : undefined;
     const emailError = !EMAIL.test(email.trim()) ? "Please enter a valid email address." : undefined;
     const valid = !nameError && !emailError;
 
     return (
-        <Dialog.Root open={open} onOpenChange={onOpenChange}>
+        <Dialog.Root open={open} onOpenChange={(v) => !paying && onOpenChange(v)} modal={!paying}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-[60] bg-ink/55 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
                 <Dialog.Content
                     data-lenis-prevent
+                    onInteractOutside={keepOpen}
+                    onFocusOutside={keepOpen}
+                    onEscapeKeyDown={keepOpen}
                     className="fixed inset-x-0 bottom-0 z-[61] max-h-[94svh] overflow-y-auto rounded-t-[1.75rem] bg-ivory p-6 shadow-lift outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[min(92vw,520px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:p-8 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:zoom-out-95"
                 >
                     <div className="flex items-start justify-between gap-4">
@@ -128,6 +136,8 @@ export function CheckoutDialog({ open, onOpenChange, property, checkIn, checkOut
                             checkInDate={checkIn}
                             checkOutDate={checkOut}
                             disabled={!valid}
+                            onCheckoutOpen={() => setPaying(true)}
+                            onCheckoutClose={() => setPaying(false)}
                             className="h-12 w-full rounded-full text-[15px]"
                         >
                             Pay {formatMoney(quote.total)} securely

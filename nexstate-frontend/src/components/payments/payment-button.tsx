@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
@@ -18,6 +17,13 @@ interface PaymentButtonProps {
     className?: string;
     children?: React.ReactNode;
     disabled?: boolean;
+    /**
+     * Called just before / after the provider window is shown. A surrounding modal dialog must stop
+     * being modal meanwhile: modal dialogs set pointer-events:none on <body> and trap focus, which
+     * would leave the provider window (appended to <body>) unclickable and untypeable.
+     */
+    onCheckoutOpen?: () => void;
+    onCheckoutClose?: () => void;
 }
 
 // Minimal typing for Razorpay Standard Checkout (https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/)
@@ -74,8 +80,9 @@ export function PaymentButton({
     className,
     children = "Proceed to Payment",
     disabled = false,
+    onCheckoutOpen,
+    onCheckoutClose,
 }: PaymentButtonProps) {
-    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -116,10 +123,13 @@ export function PaymentButton({
                     const verified = await postJson("/payments/verify", { orderNumber, data: response });
                     // The status page reads the real payment state from the server, so a slow
                     // or failed verify call never shows a wrong result.
-                    router.push(`/payment/success?order_number=${encodeURIComponent(orderNumber)}${verified.ok ? "" : "&check=1"}`);
+                    // Full page load rather than client routing: it cannot be left half-finished by the
+                    // payment overlay or an open dialog, and the receipt page fetches fresh state anyway.
+                    window.location.assign(`/payment/success?order_number=${encodeURIComponent(orderNumber)}${verified.ok ? "" : "&check=1"}`);
                 },
                 modal: {
                     ondismiss: () => {
+                        onCheckoutClose?.();
                         if (finished) return;
                         void postJson("/payments/cancel", { orderNumber });
                         setLoading(false);
@@ -134,6 +144,7 @@ export function PaymentButton({
                 setLoading(false);
             });
 
+            onCheckoutOpen?.();
             rzp.open();
         } catch (err: any) {
             setError(err?.message || "Failed to start the payment");
