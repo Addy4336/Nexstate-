@@ -210,6 +210,16 @@
     color: rgb(250 247 242 / 0.9);
   }
 
+  /* Sticks just below the floating navbar, and moves up when the navbar hides (see layout/Navbar). */
+  .under-nav {
+    position: sticky;
+    top: 5.25rem;
+    transition: top 0.5s var(--ease-out-expo);
+  }
+  html[data-nav="hidden"] .under-nav {
+    top: 0.75rem;
+  }
+
   .container-site {
     width: 100%;
     max-width: 80rem;
@@ -240,6 +250,15 @@
 }
 
 /* Lenis styles are imported in components/motion/MotionProvider. */
+
+@keyframes loadbar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
 
 @keyframes scrollcue {
   0% {

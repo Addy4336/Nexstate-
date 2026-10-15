@@ -5,13 +5,11 @@ import ResidentsVsOwners from "./ResidentsVsOwners";
 import Credibility from "./Credibility";
 import { NumberTicker } from "../ui/number-ticker";
 import { Separator } from "../ui/separator";
-import Properties from "@/app/properties/page";
 
 export default function DetailedContent() {
     return (
         <div className="flex flex-col w-full">
             <ThreeTypes />
-            <Properties />
             <WhyNexState />
             
             <div className="bg-muted/30 px-5 rounded-2xl sm:rounded-3xl p-6 sm:p-10 lg:p-14">

@@ -56,7 +56,7 @@ export function RevealText({
                         <span
                             key={i}
                             // Padding/negative margin keeps descenders (g, y, p) from being clipped.
-                            className="inline-block overflow-hidden pb-[0.14em] -mb-[0.14em] align-bottom"
+                            className="inline-block overflow-hidden pb-[0.14em] -mb-[0.14em] pr-[0.12em] -mr-[0.12em] align-bottom"
                         >
                             <motion.span
                                 className={cn("inline-block will-change-transform", emphasised && emphasisClassName)}

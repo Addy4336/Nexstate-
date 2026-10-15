@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, MapPin, Maximize2 } from "lucide-react";
-import { formatMoney } from "@nexstate/brand";
+import { addDays, parseISO } from "date-fns";
+import { Bath, BedDouble, CalendarClock, MapPin, Maximize2 } from "lucide-react";
+import { brand, formatMoney } from "@nexstate/brand";
 import { getPropertyImage } from "@/components/tenants/PropertyCard";
 import { locationSlug } from "@/lib/slug";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,14 @@ function Status({ property }: { property: Property }) {
             {label}
         </span>
     );
+}
+
+/** First day a booked home is free again (the API only exposes the booking end date, never who booked). */
+function availableFrom(property: Property): string | null {
+    if (!property.is_currently_rented || !property.rented_until) return null;
+    const end = parseISO(property.rented_until);
+    if (Number.isNaN(end.getTime())) return null;
+    return addDays(end, 1).toLocaleDateString(brand.market.locale, { day: "numeric", month: "short", year: "numeric" });
 }
 
 /** The one property card used across the site: photo-led, price in the market currency, key facts underneath. */
@@ -88,6 +97,12 @@ export function PropertyCard({ property, className, imageClassName, sizes = "(mi
                         </li>
                     ) : null}
                 </ul>
+                {availableFrom(property) && (
+                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-sand px-3 py-1 text-xs font-medium text-brass-deep">
+                        <CalendarClock className="size-3.5" aria-hidden="true" />
+                        Available from {availableFrom(property)}
+                    </p>
+                )}
             </div>
         </Link>
     );

@@ -49,6 +49,11 @@ export default function Navbar() {
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
+    // Let sticky page elements (e.g. the search filter bar) slide up when the navbar slides away.
+    useEffect(() => {
+        document.documentElement.dataset.nav = hidden && !open ? "hidden" : "shown";
+    }, [hidden, open]);
+
     // Close the menu on navigation.
     useEffect(() => setOpen(false), [pathname]);
 
