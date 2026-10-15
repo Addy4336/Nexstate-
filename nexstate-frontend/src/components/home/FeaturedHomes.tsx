@@ -48,9 +48,9 @@ export function FeaturedHomes({ properties }: { properties: Property[] }) {
 
     return (
         <HorizontalScroller
-            className="bg-ivory py-20 md:py-28 lg:pb-0 lg:pt-24"
+            className="bg-ivory py-20 md:py-28 lg:pb-0"
             header={
-                <Container className="mb-10 lg:mb-8">
+                <Container className="mb-10 lg:mb-6">
                     <SectionHeading eyebrow="Featured homes" title={TITLE} lead={LEAD} actions={<AllHomesButton />} />
                 </Container>
             }
@@ -59,8 +59,8 @@ export function FeaturedHomes({ properties }: { properties: Property[] }) {
                 <PropertyCard
                     key={p.id}
                     property={p}
-                    className="w-[min(78vw,380px)] shrink-0 snap-start lg:w-[32vh] lg:min-w-[260px]"
-                    imageClassName="lg:aspect-auto lg:h-[44vh]"
+                    className="w-[min(78vw,380px)] shrink-0 snap-start select-none lg:w-[clamp(250px,21vw,340px)]"
+                    imageClassName="lg:aspect-auto lg:h-[clamp(190px,34vh,430px)]"
                     sizes="(min-width: 1024px) 24vw, 80vw"
                 />
             ))}
