@@ -186,3 +186,10 @@ export const cityImages = [
     { slug: "hyderabad", name: "Hyderabad", state: "Telangana", blurb: "Old city charm, new city comfort", image: siteImages.cityHyderabad },
     { slug: "pune", name: "Pune", state: "Maharashtra", blurb: "Green hills, calm neighbourhoods", image: siteImages.cityPune },
 ] as const;
+
+/** The marketing photo for a city name as stored in listings ("Mumbai", "Delhi"); falls back to the hero villa. */
+export function cityImageFor(city: string): SiteImage {
+    const c = city.trim().toLowerCase();
+    const hit = cityImages.find((x) => x.name.toLowerCase() === c || x.name.toLowerCase().startsWith(c) || c.startsWith(x.name.toLowerCase().split(" ")[0]));
+    return hit ? hit.image : siteImages.heroVilla;
+}

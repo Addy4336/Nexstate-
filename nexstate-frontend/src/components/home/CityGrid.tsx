@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { Section, SectionHeading } from "@/components/layout/Section";
+import { Section, SectionHeading, type SectionTone } from "@/components/layout/Section";
 import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { cityImages, fillProps } from "@/lib/site-images";
 import { cn } from "@/lib/utils";
@@ -22,15 +22,32 @@ function countFor(name: string, properties: Property[]) {
     return properties.filter((p) => p.location.toLowerCase().includes(needle)).length;
 }
 
-export function CityGrid({ properties }: { properties: Property[] }) {
+export function CityGrid({
+    properties,
+    tone = "sand",
+    heading = true,
+}: {
+    properties: Property[];
+    tone?: SectionTone;
+    /** Show the built-in "Find your neighbourhood" heading (turn off when the page supplies its own). */
+    heading?: boolean;
+}) {
     return (
-        <Section tone="sand" id="cities">
-            <SectionHeading
-                eyebrow="Explore by city"
-                title="Find your *neighbourhood*"
-                lead="Six cities, each with its own rhythm. Start with the one you are moving to."
-            />
-            <RevealGroup className="mt-12 grid auto-rows-[260px] grid-cols-2 gap-3 md:auto-rows-[300px] md:grid-cols-3 md:gap-4 lg:mt-16 lg:grid-cols-12 lg:auto-rows-[260px]" stagger={0.08}>
+        <Section tone={tone} id="cities" spacing={heading ? "md" : "sm"}>
+            {heading && (
+                <SectionHeading
+                    eyebrow="Explore by city"
+                    title="Find your *neighbourhood*"
+                    lead="Six cities, each with its own rhythm. Start with the one you are moving to."
+                />
+            )}
+            <RevealGroup
+                className={cn(
+                    heading && "mt-12 lg:mt-16",
+                    "grid auto-rows-[260px] grid-cols-2 gap-3 md:auto-rows-[300px] md:grid-cols-3 md:gap-4 lg:grid-cols-12 lg:auto-rows-[260px]"
+                )}
+                stagger={0.08}
+            >
                 {cityImages.map((c, i) => {
                     const n = countFor(c.name, properties);
                     const q = c.name === "Delhi NCR" ? "Delhi" : c.name;
